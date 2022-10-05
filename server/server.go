@@ -18,7 +18,8 @@ var (
 		"first":  {},
 		"second": {},
 	}
-	clients []Client
+	clients    []Client
+	numClients = 0
 )
 
 type ChannelGroup map[string][]Client
@@ -80,27 +81,40 @@ func RunServer() {
 			continue
 		}
 		fmt.Println("Client connected")
+		numClients++
 		go processClient(connection)
 	}
 }
 
+func ChooseChannel() string {
+	if numClients%2 == 0 {
+
+		fmt.Printf("Clientes par\n")
+		return "first"
+	} else {
+
+		fmt.Printf("Clientes impar\n")
+		return "second"
+	}
+}
+
 func processClient(connection net.Conn) {
-
+	chooseChannel := ChooseChannel()
 	client := newClient("", connection)
-	suscribeToChannelGroup(*client, "first")
+	suscribeToChannelGroup(*client, chooseChannel)
 
-	fmt.Printf("Clients %v", channelGroup["first"])
+	fmt.Printf("Clients %v", channelGroup[chooseChannel])
 
-	messages <- newMessage(" joined.", connection, "first")
+	messages <- newMessage(" joined.", connection, chooseChannel)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-		messages <- newMessage(": "+scanner.Text(), connection, "first")
+		messages <- newMessage(": "+scanner.Text(), connection, chooseChannel)
 	}
 	// clients := channelGroup["first"]
 	// delete(clients, connection.RemoteAddr().String())
 
-	leaving <- newMessage(" has left.", connection, "first")
+	leaving <- newMessage(" has left.", connection, chooseChannel)
 
 	connection.Close()
 
@@ -116,24 +130,19 @@ func newMessage(msg string, conn net.Conn, channel string) message {
 }
 
 func broadcaster() {
-	//fmt.Printf("Clients %v", clients)
 	for {
-		fmt.Println("BROADCAST")
 		select {
 		case msg := <-messages:
-			fmt.Println("CASE INCOMING")
 			for _, client := range channelGroup[msg.channel] {
-				fmt.Println("FOR")
+
 				if msg.address == client.Address { // Checking if the user it's the same who sent the message
-					fmt.Println("SAME")
+
 					continue
 				}
-				fmt.Println("CLIENT: ", client.returnJSON())
 				fmt.Fprintln(client.Connection, msg.text)
 			}
 
 		case msg := <-leaving:
-			fmt.Println("CASE LEAVING")
 			for _, client := range clients {
 				fmt.Fprintln(client.Connection, msg.text)
 			}
