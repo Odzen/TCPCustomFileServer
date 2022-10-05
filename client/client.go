@@ -27,7 +27,10 @@ func EstablishConnection() {
 
 	done := make(chan struct{})
 	go func() {
-		io.Copy(os.Stdout, connection)
+		_, err = io.Copy(os.Stdout, connection)
+		if err != nil {
+			log.Fatal(err)
+		}
 		done <- struct{}{}
 	}()
 
@@ -35,8 +38,8 @@ func EstablishConnection() {
 	<-done
 }
 
-func copyContent(destino io.Writer, fuente io.Reader) {
-	_, err := io.Copy(destino, fuente)
+func copyContent(receiver io.Writer, source io.Reader) {
+	_, err := io.Copy(receiver, source)
 
 	if err != nil {
 		log.Fatal(err)

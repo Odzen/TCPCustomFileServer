@@ -6,10 +6,18 @@ import (
 	"log"
 	"net"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 )
+
+var clients = make(map[string]net.Conn)
+var leaving = make(chan message)
+var messages = make(chan message)
+
+type message struct {
+	text    string
+	address string
+}
 
 func init() {
 
@@ -31,6 +39,7 @@ func RunServer() {
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
 
+	go broadcaster()
 	for {
 		connection, err := server.Accept()
 		if err != nil {
@@ -43,17 +52,48 @@ func RunServer() {
 }
 
 func processClient(connection net.Conn) {
-	err := connection.SetDeadline(time.Now().Add(10 * time.Second))
-	if err != nil {
-		log.Fatalln("Timeout error")
-	}
-	defer connection.Close()
+
+	clients[connection.RemoteAddr().String()] = connection
+
+	messages <- newMessage(" joined.", connection)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-		ln := scanner.Text()
-		fmt.Println(ln)
-		fmt.Fprintf(connection, "I heard you say: %s\n", ln)
+		messages <- newMessage(": "+scanner.Text(), connection)
 	}
 
+	delete(clients, connection.RemoteAddr().String())
+
+	leaving <- newMessage(" has left.", connection)
+
+	connection.Close()
+
+}
+
+func newMessage(msg string, conn net.Conn) message {
+	addr := conn.RemoteAddr().String()
+	return message{
+		text:    addr + msg,
+		address: addr,
+	}
+}
+
+func broadcaster() {
+	for {
+		select {
+		case msg := <-messages:
+			for _, conn := range clients {
+				if msg.address == conn.RemoteAddr().String() {
+					continue
+				}
+				fmt.Fprintln(conn, msg.text) // NOTE: ignoring network errors
+			}
+
+		case msg := <-leaving:
+			for _, conn := range clients {
+				fmt.Fprintln(conn, msg.text) // NOTE: ignoring network errors
+			}
+
+		}
+	}
 }
