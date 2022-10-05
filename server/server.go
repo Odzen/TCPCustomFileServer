@@ -10,9 +10,34 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var clients = make(map[string]net.Conn)
-var leaving = make(chan message)
-var messages = make(chan message)
+var (
+	leaving      = make(chan message)
+	messages     = make(chan message)
+	channelGroup = map[string][]Client{
+		"first":  {},
+		"second": {},
+	}
+)
+
+type ChannelGroup map[string][]Client
+
+type Client struct {
+	name       string
+	address    string
+	connection net.Conn
+}
+
+func newClient(name string, connection net.Conn) *Client {
+	return &Client{
+		name:       name,
+		address:    connection.RemoteAddr().String(),
+		connection: connection,
+	}
+}
+
+func suscribeToChannelGroup(client Client, channel string) {
+	channelGroup[channel] = append(channelGroup[channel], client)
+}
 
 type message struct {
 	text    string
@@ -53,7 +78,8 @@ func RunServer() {
 
 func processClient(connection net.Conn) {
 
-	clients[connection.RemoteAddr().String()] = connection
+	client := newClient("", connection)
+	suscribeToChannelGroup(*client, "first")
 
 	messages <- newMessage(" joined.", connection)
 
@@ -61,8 +87,8 @@ func processClient(connection net.Conn) {
 	for scanner.Scan() {
 		messages <- newMessage(": "+scanner.Text(), connection)
 	}
-
-	delete(clients, connection.RemoteAddr().String())
+	// clients := channelGroup["first"]
+	// delete(clients, connection.RemoteAddr().String())
 
 	leaving <- newMessage(" has left.", connection)
 
@@ -79,19 +105,20 @@ func newMessage(msg string, conn net.Conn) message {
 }
 
 func broadcaster() {
+	clients := channelGroup["first"]
 	for {
 		select {
 		case msg := <-messages:
-			for _, conn := range clients {
-				if msg.address == conn.RemoteAddr().String() {
+			for _, client := range clients {
+				if msg.address == client.address { // Checking if the user it's the same who sent the message
 					continue
 				}
-				fmt.Fprintln(conn, msg.text) // NOTE: ignoring network errors
+				fmt.Fprintln(client.connection, msg.text)
 			}
 
 		case msg := <-leaving:
-			for _, conn := range clients {
-				fmt.Fprintln(conn, msg.text) // NOTE: ignoring network errors
+			for _, client := range clients {
+				fmt.Fprintln(client.connection, msg.text)
 			}
 
 		}
