@@ -2,6 +2,7 @@ package server
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -17,21 +18,27 @@ var (
 		"first":  {},
 		"second": {},
 	}
+	clients []Client
 )
 
 type ChannelGroup map[string][]Client
 
 type Client struct {
-	name       string
-	address    string
-	connection net.Conn
+	Name       string   `json:"name"`
+	Address    string   `json:"address"`
+	Connection net.Conn `json:"connection"`
+}
+
+func (client *Client) returnJSON() string {
+	clientJSON, _ := json.Marshal(client)
+	return string(clientJSON)
 }
 
 func newClient(name string, connection net.Conn) *Client {
 	return &Client{
-		name:       name,
-		address:    connection.RemoteAddr().String(),
-		connection: connection,
+		Name:       name,
+		Address:    connection.RemoteAddr().String(),
+		Connection: connection,
 	}
 }
 
@@ -42,6 +49,7 @@ func suscribeToChannelGroup(client Client, channel string) {
 type message struct {
 	text    string
 	address string
+	channel string
 }
 
 func init() {
@@ -81,44 +89,53 @@ func processClient(connection net.Conn) {
 	client := newClient("", connection)
 	suscribeToChannelGroup(*client, "first")
 
-	messages <- newMessage(" joined.", connection)
+	fmt.Printf("Clients %v", channelGroup["first"])
+
+	messages <- newMessage(" joined.", connection, "first")
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-		messages <- newMessage(": "+scanner.Text(), connection)
+		messages <- newMessage(": "+scanner.Text(), connection, "first")
 	}
 	// clients := channelGroup["first"]
 	// delete(clients, connection.RemoteAddr().String())
 
-	leaving <- newMessage(" has left.", connection)
+	leaving <- newMessage(" has left.", connection, "first")
 
 	connection.Close()
 
 }
 
-func newMessage(msg string, conn net.Conn) message {
+func newMessage(msg string, conn net.Conn, channel string) message {
 	addr := conn.RemoteAddr().String()
 	return message{
 		text:    addr + msg,
 		address: addr,
+		channel: channel,
 	}
 }
 
 func broadcaster() {
-	clients := channelGroup["first"]
+	//fmt.Printf("Clients %v", clients)
 	for {
+		fmt.Println("BROADCAST")
 		select {
 		case msg := <-messages:
-			for _, client := range clients {
-				if msg.address == client.address { // Checking if the user it's the same who sent the message
+			fmt.Println("CASE INCOMING")
+			for _, client := range channelGroup[msg.channel] {
+				fmt.Println("FOR")
+				if msg.address == client.Address { // Checking if the user it's the same who sent the message
+					fmt.Println("SAME")
 					continue
 				}
-				fmt.Fprintln(client.connection, msg.text)
+				fmt.Println("CLIENT: ", client.returnJSON())
+				fmt.Fprintln(client.Connection, msg.text)
 			}
 
 		case msg := <-leaving:
+			fmt.Println("CASE LEAVING")
 			for _, client := range clients {
-				fmt.Fprintln(client.connection, msg.text)
+				fmt.Fprintln(client.Connection, msg.text)
 			}
 
 		}
