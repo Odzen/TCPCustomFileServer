@@ -17,6 +17,5 @@ linters:
     - unparam
     - bodyclose
     - nakedret
-    - tparallel
 issues:
   exclude-use-default: false
