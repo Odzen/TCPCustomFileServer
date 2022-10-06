@@ -8,19 +8,19 @@ import (
 	"os"
 
 	types "github.com/Odzen/TCPCustomFileServer/server/types"
-
 	"github.com/joho/godotenv"
 )
 
+var defaultChannels = map[int][]types.Client{
+	1: {},
+	2: {},
+}
+
 var (
-	leaving                         = make(chan types.Message)
-	messages                        = make(chan types.Message)
-	channelGroup types.ChannelGroup = map[int][]types.Client{
-		1: {},
-		2: {},
-	}
-	clients    []types.Client
-	numClients = 0
+	leaving      = make(chan types.Message)
+	messages     = make(chan types.Message)
+	channelGroup = types.NewChannelGroup(defaultChannels)
+	numClients   = 0
 )
 
 func init() {
@@ -65,22 +65,23 @@ func ChooseChannel() int {
 }
 
 func processClient(connection net.Conn) {
-	chooseChannel := ChooseChannel()
+	selectedChannel := ChooseChannel()
 	client := types.NewClient("", connection)
-	channelGroup.SuscribeToChannelGroup(*client, chooseChannel)
+	channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
 
-	fmt.Printf("Clients %v", channelGroup[chooseChannel])
-
-	messages <- types.NewMessage(" joined.", connection, chooseChannel)
+	channelGroup.Print()
+	messages <- types.NewMessage(" joined.", connection, selectedChannel)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-		messages <- types.NewMessage(": "+scanner.Text(), connection, chooseChannel)
+		messages <- types.NewMessage(": "+scanner.Text(), connection, selectedChannel)
 	}
-	// clients := channelGroup["1"]
-	// delete(clients, connection.RemoteAddr().String())
 
-	leaving <- types.NewMessage(" has left.", connection, chooseChannel)
+	fmt.Println("CLIENT LEFT")
+	channelGroup.DeleteClientFromChannel(*client, selectedChannel)
+	channelGroup.Print()
+
+	leaving <- types.NewMessage(" has left.", connection, selectedChannel)
 
 	connection.Close()
 
@@ -90,7 +91,7 @@ func broadcaster() {
 	for {
 		select {
 		case msg := <-messages:
-			for _, client := range channelGroup[msg.ChannelPipeline] {
+			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 
 				if msg.Address == client.Address { // Checking if the user it's the same who sent the message
 
@@ -101,7 +102,7 @@ func broadcaster() {
 			}
 
 		case msg := <-leaving:
-			for _, client := range clients {
+			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 				fmt.Fprintln(client.Connection, msg.Text)
 			}
 
