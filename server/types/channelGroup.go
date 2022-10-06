@@ -1,4 +1,4 @@
-package types
+package server
 
 type ChannelGroup map[int][]Client
 

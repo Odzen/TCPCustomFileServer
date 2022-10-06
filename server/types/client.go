@@ -1,4 +1,4 @@
-package types
+package server
 
 import (
 	"encoding/json"
@@ -30,5 +30,5 @@ func NewClient(name string, connection net.Conn) *Client {
 		Name:       name,
 		Address:    connection.RemoteAddr().String(),
 		Connection: connection,
-}
+	}
 }
