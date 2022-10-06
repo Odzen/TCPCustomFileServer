@@ -1,0 +1,22 @@
+output:
+  format: colored-line-number
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gocyclo
+    - goconst
+    - goimports
+    - misspell
+    - unconvert
+    - unparam
+    - bodyclose
+    - nakedret
+    - tparallel
+issues:
+  exclude-use-default: false

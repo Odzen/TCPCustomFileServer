@@ -57,12 +57,8 @@ func RunServer() {
 
 func ChooseChannel() int {
 	if numClients%2 == 0 {
-
-		fmt.Printf("Clientes par\n")
 		return 1
 	} else {
-
-		fmt.Printf("Clientes impar\n")
 		return 2
 	}
 }
