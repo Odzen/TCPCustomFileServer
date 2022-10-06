@@ -23,7 +23,7 @@ func main() {
 	case "server":
 		server.RunServer()
 	default:
-		fmt.Println("Command not found.")
+		fmt.Println("Program not found.")
 	}
 
 }

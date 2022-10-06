@@ -12,21 +12,15 @@ import (
 )
 
 var (
-	leaving      = make(chan types.Message)
-	messages     = make(chan types.Message)
-	channelGroup = map[string][]types.Client{
+	leaving                         = make(chan types.Message)
+	messages                        = make(chan types.Message)
+	channelGroup types.ChannelGroup = map[string][]types.Client{
 		"first":  {},
 		"second": {},
 	}
 	clients    []types.Client
 	numClients = 0
 )
-
-type ChannelGroup map[string][]types.Client
-
-func suscribeToChannelGroup(client types.Client, channel string) {
-	channelGroup[channel] = append(channelGroup[channel], client)
-}
 
 func init() {
 
@@ -76,7 +70,7 @@ func ChooseChannel() string {
 func processClient(connection net.Conn) {
 	chooseChannel := ChooseChannel()
 	client := types.NewClient("", connection)
-	suscribeToChannelGroup(*client, chooseChannel)
+	channelGroup.SuscribeToChannelGroup(*client, chooseChannel)
 
 	fmt.Printf("Clients %v", channelGroup[chooseChannel])
 

@@ -5,6 +5,11 @@ import (
 	"net"
 )
 
+type IClient interface {
+	ReturnJSON() string
+	ChangeName(newName string)
+}
+
 type Client struct {
 	Name       string   `json:"name"`
 	Address    string   `json:"address"`
