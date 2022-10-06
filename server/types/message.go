@@ -3,16 +3,16 @@ package types
 import "net"
 
 type Message struct {
-	Text    string
-	Address string
-	Channel string
+	Text            string
+	Address         string
+	ChannelPipeline int
 }
 
-func NewMessage(msg string, conn net.Conn, channel string) Message {
+func NewMessage(msg string, conn net.Conn, channel int) Message {
 	addr := conn.RemoteAddr().String()
 	return Message{
-		Text:    addr + msg,
-		Address: addr,
-		Channel: channel,
+		Text:            addr + msg,
+		Address:         addr,
+		ChannelPipeline: channel,
 	}
 }

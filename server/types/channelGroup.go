@@ -1,7 +1,7 @@
 package types
 
-type ChannelGroup map[string][]Client
+type ChannelGroup map[int][]Client
 
-func (channelGroup ChannelGroup) SuscribeToChannelGroup(client Client, channel string) {
+func (channelGroup ChannelGroup) SuscribeToChannelGroup(client Client, channel int) {
 	channelGroup[channel] = append(channelGroup[channel], client)
 }

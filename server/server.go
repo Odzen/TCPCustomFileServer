@@ -14,9 +14,9 @@ import (
 var (
 	leaving                         = make(chan types.Message)
 	messages                        = make(chan types.Message)
-	channelGroup types.ChannelGroup = map[string][]types.Client{
-		"first":  {},
-		"second": {},
+	channelGroup types.ChannelGroup = map[int][]types.Client{
+		1: {},
+		2: {},
 	}
 	clients    []types.Client
 	numClients = 0
@@ -55,15 +55,15 @@ func RunServer() {
 	}
 }
 
-func ChooseChannel() string {
+func ChooseChannel() int {
 	if numClients%2 == 0 {
 
 		fmt.Printf("Clientes par\n")
-		return "first"
+		return 1
 	} else {
 
 		fmt.Printf("Clientes impar\n")
-		return "second"
+		return 2
 	}
 }
 
@@ -80,7 +80,7 @@ func processClient(connection net.Conn) {
 	for scanner.Scan() {
 		messages <- types.NewMessage(": "+scanner.Text(), connection, chooseChannel)
 	}
-	// clients := channelGroup["first"]
+	// clients := channelGroup["1"]
 	// delete(clients, connection.RemoteAddr().String())
 
 	leaving <- types.NewMessage(" has left.", connection, chooseChannel)
@@ -93,7 +93,7 @@ func broadcaster() {
 	for {
 		select {
 		case msg := <-messages:
-			for _, client := range channelGroup[msg.Channel] {
+			for _, client := range channelGroup[msg.ChannelPipeline] {
 
 				if msg.Address == client.Address { // Checking if the user it's the same who sent the message
 
