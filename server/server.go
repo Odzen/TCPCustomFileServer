@@ -8,6 +8,7 @@ import (
 	"os"
 
 	types "github.com/Odzen/TCPCustomFileServer/server/types"
+	utils "github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -38,7 +39,7 @@ func RunServer() {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
-	defer server.Close()
+	defer utils.CloseConnectionServer(server)
 	fmt.Println("Server Running...")
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
@@ -83,7 +84,7 @@ func processClient(connection net.Conn) {
 
 	leaving <- types.NewMessage(" has left.", connection, selectedChannel)
 
-	connection.Close()
+	utils.CloseConnectionClient(connection)
 
 }
 

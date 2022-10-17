@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 
+	utils "github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -23,7 +24,7 @@ func EstablishConnection() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer connection.Close()
+	defer utils.CloseConnectionClient(connection)
 
 	done := make(chan struct{})
 	go func() {
