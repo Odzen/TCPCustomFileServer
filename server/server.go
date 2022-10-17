@@ -8,18 +8,20 @@ import (
 	"os"
 
 	types "github.com/Odzen/TCPCustomFileServer/server/types"
+	utils "github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
 
+var defaultChannels = map[int][]types.Client{
+	1: {},
+	2: {},
+}
+
 var (
-	leaving                         = make(chan types.Message)
-	messages                        = make(chan types.Message)
-	channelGroup types.ChannelGroup = map[string][]types.Client{
-		"first":  {},
-		"second": {},
-	}
-	clients    []types.Client
-	numClients = 0
+	leaving      = make(chan types.Message)
+	messages     = make(chan types.Message)
+	channelGroup = types.NewChannelGroup(defaultChannels)
+	numClients   = 0
 )
 
 func init() {
@@ -37,7 +39,7 @@ func RunServer() {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
-	defer server.Close()
+	defer utils.CloseConnectionServer(server)
 	fmt.Println("Server Running...")
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
@@ -55,37 +57,34 @@ func RunServer() {
 	}
 }
 
-func ChooseChannel() string {
+func ChooseChannel() int {
 	if numClients%2 == 0 {
-
-		fmt.Printf("Clientes par\n")
-		return "first"
+		return 1
 	} else {
-
-		fmt.Printf("Clientes impar\n")
-		return "second"
+		return 2
 	}
 }
 
 func processClient(connection net.Conn) {
-	chooseChannel := ChooseChannel()
+	selectedChannel := ChooseChannel()
 	client := types.NewClient("", connection)
-	channelGroup.SuscribeToChannelGroup(*client, chooseChannel)
+	channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
 
-	fmt.Printf("Clients %v", channelGroup[chooseChannel])
-
-	messages <- types.NewMessage(" joined.", connection, chooseChannel)
+	channelGroup.Print()
+	messages <- types.NewMessage(" joined.", connection, selectedChannel)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-		messages <- types.NewMessage(": "+scanner.Text(), connection, chooseChannel)
+		messages <- types.NewMessage(": "+scanner.Text(), connection, selectedChannel)
 	}
-	// clients := channelGroup["first"]
-	// delete(clients, connection.RemoteAddr().String())
 
-	leaving <- types.NewMessage(" has left.", connection, chooseChannel)
+	fmt.Println("CLIENT LEFT")
+	channelGroup.DeleteClientFromChannel(*client, selectedChannel)
+	channelGroup.Print()
 
-	connection.Close()
+	leaving <- types.NewMessage(" has left.", connection, selectedChannel)
+
+	utils.CloseConnectionClient(connection)
 
 }
 
@@ -93,7 +92,7 @@ func broadcaster() {
 	for {
 		select {
 		case msg := <-messages:
-			for _, client := range channelGroup[msg.Channel] {
+			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 
 				if msg.Address == client.Address { // Checking if the user it's the same who sent the message
 
@@ -104,7 +103,7 @@ func broadcaster() {
 			}
 
 		case msg := <-leaving:
-			for _, client := range clients {
+			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 				fmt.Fprintln(client.Connection, msg.Text)
 			}
 

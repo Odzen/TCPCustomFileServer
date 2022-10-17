@@ -25,6 +25,10 @@ func (client *Client) ChangeName(newName string) {
 	client.Name = newName
 }
 
+func (client *Client) equals(otherClient Client) bool {
+	return (client.Address == otherClient.Address) && (client.Name == otherClient.Name) && (client.Connection == otherClient.Connection)
+}
+
 func NewClient(name string, connection net.Conn) *Client {
 	return &Client{
 		Name:       name,
