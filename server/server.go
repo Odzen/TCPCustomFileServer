@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	types "github.com/Odzen/TCPCustomFileServer/server/types"
 	utils "github.com/Odzen/TCPCustomFileServer/utils"
@@ -21,6 +22,7 @@ var (
 	leaving      = make(chan types.Message)
 	messages     = make(chan types.Message)
 	channelGroup = types.NewChannelGroup(defaultChannels)
+	commands     = make(chan types.Command)
 	numClients   = 0
 )
 
@@ -69,7 +71,7 @@ func processClient(connection net.Conn) {
 	defer utils.CloseConnectionClient(connection)
 
 	selectedChannel := ChooseChannel()
-	client := types.NewClient("", connection)
+	client := types.NewClient("anonymous", connection, commands)
 	channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
 
 	channelGroup.Print()
@@ -77,6 +79,13 @@ func processClient(connection net.Conn) {
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
+
+		// Process commands
+		newLine := strings.Trim(scanner.Text(), "\r\n")
+		args := strings.Split(newLine, " ")
+		command := strings.TrimSpace(args[0])
+		client.ProcessCommand(command, args)
+
 		messages <- types.NewMessage(": "+scanner.Text(), connection, selectedChannel)
 	}
 
@@ -91,20 +100,40 @@ func processClient(connection net.Conn) {
 func broadcaster() {
 	for {
 		select {
+		case command := <-commands:
+			switch command.Id {
+			case types.USERNAME:
+				fmt.Fprintln(command.Client.Connection, "-> "+"USERNAME command"+"Arguments: "+command.Args[0])
+
+			case types.SUSCRIBE:
+				fmt.Fprintln(command.Client.Connection, "-> "+"SUSCRIBE command"+"Arguments: "+command.Args[0])
+
+			case types.CHANNELS:
+				fmt.Fprintln(command.Client.Connection, "-> "+"CHANNELS command"+"Arguments: "+command.Args[0])
+
+			case types.MESSAGE:
+				fmt.Fprintln(command.Client.Connection, "-> "+"MESSAGE command"+"Arguments: "+command.Args[0])
+
+			case types.FILE:
+				fmt.Fprintln(command.Client.Connection, "-> "+"FILE command"+"Arguments: "+command.Args[0])
+
+			case types.EXIT:
+				fmt.Fprintln(command.Client.Connection, "-> "+"EXIT command"+"Arguments: "+command.Args[0])
+			}
+
 		case msg := <-messages:
 			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 
 				if msg.Address == client.Address { // Checking if the user it's the same who sent the message
-
 					continue
 				}
 
-				fmt.Fprintln(client.Connection, msg.Text)
+				fmt.Fprintln(client.Connection, "-> "+msg.Text)
 			}
 
 		case msg := <-leaving:
 			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-				fmt.Fprintln(client.Connection, msg.Text)
+				fmt.Fprintln(client.Connection, "-> "+msg.Text)
 			}
 
 		}
