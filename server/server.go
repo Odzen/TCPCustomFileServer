@@ -66,6 +66,8 @@ func ChooseChannel() int {
 }
 
 func processClient(connection net.Conn) {
+	defer utils.CloseConnectionClient(connection)
+
 	selectedChannel := ChooseChannel()
 	client := types.NewClient("", connection)
 	channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
@@ -83,8 +85,6 @@ func processClient(connection net.Conn) {
 	channelGroup.Print()
 
 	leaving <- types.NewMessage(" has left.", connection, selectedChannel)
-
-	utils.CloseConnectionClient(connection)
 
 }
 
