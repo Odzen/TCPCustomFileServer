@@ -11,7 +11,7 @@ type idCommand int
 
 const (
 	USERNAME idCommand = iota
-	SUSCRIBE
+	SUBSCRIBE
 	CHANNELS
 	MESSAGE
 	FILE
@@ -32,9 +32,9 @@ func ProcessCommand(command string, args []string, client *Client) {
 			Client: client,
 			Args:   args,
 		}
-	case "=suscribe":
+	case "=subscribe":
 		client.Commands <- Command{
-			Id:     SUSCRIBE,
+			Id:     SUBSCRIBE,
 			Client: client,
 			Args:   args,
 		}

@@ -81,7 +81,7 @@ func handleCommands() {
 		case types.USERNAME:
 			types.CreateUsername(command.Client, command.Args)
 
-		case types.SUSCRIBE:
+		case types.SUBSCRIBE:
 			types.SuscribeToChannel(command.Client, command.Args, channelGroup)
 
 		case types.CHANNELS:
