@@ -5,6 +5,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+
+	"github.com/Odzen/TCPCustomFileServer/utils"
 )
 
 type idCommand int
@@ -72,7 +74,7 @@ func CreateUsername(client *Client, args []string) {
 	fmt.Fprintln(client.Connection, "Username has been changed to: "+client.Name)
 }
 
-func SuscribeToChannel(client Client, args []string, channelGroup ChannelGroup) {
+func SuscribeToChannel(client *Client, args []string, channelGroup ChannelGroup) {
 	selectedChannel, err := strconv.Atoi(args[1])
 
 	if err != nil {
@@ -81,7 +83,8 @@ func SuscribeToChannel(client Client, args []string, channelGroup ChannelGroup) 
 	}
 
 	channelGroup.SuscribeToChannelGroup(client, selectedChannel)
-	fmt.Fprintln(client.Connection, "You: "+client.Name)
+
+	channelGroup.Print()
 }
 
 func ShowChannels(client *Client, args []string, channelGroup ChannelGroup) {
@@ -103,5 +106,7 @@ func SendFile(client *Client, args []string) {
 
 func Exit(client *Client, args []string, channelGroup ChannelGroup) {
 	log.Printf("Client left: %s", client.Address)
+	channelGroup.Print()
 	channelGroup.DeleteClientFromChannel(*client, client.suscribedToChannel)
+	utils.CloseConnectionClient(client.Connection)
 }

@@ -13,14 +13,14 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var defaultChannels = map[int][]types.Client{
+var defaultChannels = map[int][]*types.Client{
 	1: {},
 	2: {},
 }
 
 var (
-	leaving      = make(chan types.Message)
-	messages     = make(chan types.Message)
+	// leaving      = make(chan types.Message)
+	// messages     = make(chan types.Message)
 	channelGroup = types.NewChannelGroup(defaultChannels)
 	commands     = make(chan types.Command)
 	numClients   = 0
@@ -70,11 +70,10 @@ func ChooseChannel() int {
 func processClient(connection net.Conn) {
 	defer utils.CloseConnectionClient(connection)
 
-	selectedChannel := ChooseChannel()
+	// selectedChannel := ChooseChannel()
 	client := types.NewClient("anonymous", connection, commands)
-	channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
+	// channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
 
-	channelGroup.Print()
 	// messages <- types.NewMessage(" joined.", connection, selectedChannel)
 
 	scanner := bufio.NewScanner(connection)
@@ -91,51 +90,50 @@ func processClient(connection net.Conn) {
 
 	//fmt.Println("CLIENT LEFT")
 	//channelGroup.DeleteClientFromChannel(*client, selectedChannel)
-	channelGroup.Print()
 
 	// leaving <- types.NewMessage(" has left.", connection, selectedChannel)
 
 }
 
 func broadcaster() {
-	for {
-		select {
-		case command := <-commands:
-			switch command.Id {
-			case types.USERNAME:
-				types.CreateUsername(command.Client, command.Args)
+	for command := range commands {
+		// select {
+		// case command := <-commands:
+		switch command.Id {
+		case types.USERNAME:
+			types.CreateUsername(command.Client, command.Args)
 
-			case types.SUSCRIBE:
-				types.SuscribeToChannel(*command.Client, command.Args, channelGroup)
+		case types.SUSCRIBE:
+			types.SuscribeToChannel(command.Client, command.Args, channelGroup)
 
-			case types.CHANNELS:
-				types.ShowChannels(command.Client, command.Args, channelGroup)
+		case types.CHANNELS:
+			types.ShowChannels(command.Client, command.Args, channelGroup)
 
-			case types.MESSAGE:
-				types.SendMessage(command.Client, command.Args, channelGroup)
+		case types.MESSAGE:
+			types.SendMessage(command.Client, command.Args, channelGroup)
 
-			case types.FILE:
-				types.SendFile(command.Client, command.Args)
+		case types.FILE:
+			types.SendFile(command.Client, command.Args)
 
-			case types.EXIT:
-				types.Exit(command.Client, command.Args, channelGroup)
-			}
-
-			// case msg := <-messages:
-			// 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-
-			// 		if msg.Address == client.Address { // Checking if the user it's the same who sent the message
-			// 			continue
-			// 		}
-
-			// 		fmt.Fprintln(client.Connection, "-> "+msg.Text)
-			// 	}
-
-			// case msg := <-leaving:
-			// 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-			// 		fmt.Fprintln(client.Connection, "-> "+msg.Text)
-			// 	}
-
+		case types.EXIT:
+			types.Exit(command.Client, command.Args, channelGroup)
 		}
+
+		// case msg := <-messages:
+		// 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
+
+		// 		if msg.Address == client.Address { // Checking if the user it's the same who sent the message
+		// 			continue
+		// 		}
+
+		// 		fmt.Fprintln(client.Connection, "-> "+msg.Text)
+		// 	}
+
+		// case msg := <-leaving:
+		// 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
+		// 		fmt.Fprintln(client.Connection, "-> "+msg.Text)
+		// 	}
+
+		// }
 	}
 }
