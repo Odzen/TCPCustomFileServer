@@ -19,8 +19,6 @@ var defaultChannels = map[int][]*types.Client{
 }
 
 var (
-	// leaving      = make(chan types.Message)
-	// messages     = make(chan types.Message)
 	channelGroup = types.NewChannelGroup(defaultChannels)
 	commands     = make(chan types.Command)
 	numClients   = 0
@@ -59,46 +57,26 @@ func RunServer() {
 	}
 }
 
-func ChooseChannel() int {
-	if numClients%2 == 0 {
-		return 1
-	} else {
-		return 2
-	}
-}
-
 func processClient(connection net.Conn) {
 	defer utils.CloseConnectionClient(connection)
-
-	// selectedChannel := ChooseChannel()
 	client := types.NewClient("anonymous", connection, commands)
-	// channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
-
-	// messages <- types.NewMessage(" joined.", connection, selectedChannel)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-
 		// Process commands
 		newLine := strings.Trim(scanner.Text(), "\r\n")
 		args := strings.Split(newLine, " ")
 		command := strings.TrimSpace(args[0])
 		types.ProcessCommand(command, args, client)
 
-		// messages <- types.NewMessage(": "+scanner.Text(), connection, selectedChannel)
 	}
 
-	//fmt.Println("CLIENT LEFT")
-	//channelGroup.DeleteClientFromChannel(*client, selectedChannel)
-
-	// leaving <- types.NewMessage(" has left.", connection, selectedChannel)
+	types.Exit(client, channelGroup)
 
 }
 
 func broadcaster() {
 	for command := range commands {
-		// select {
-		// case command := <-commands:
 		switch command.Id {
 		case types.USERNAME:
 			types.CreateUsername(command.Client, command.Args)
@@ -116,24 +94,7 @@ func broadcaster() {
 			types.SendFile(command.Client, command.Args)
 
 		case types.EXIT:
-			types.Exit(command.Client, command.Args, channelGroup)
+			types.Exit(command.Client, channelGroup)
 		}
-
-		// case msg := <-messages:
-		// 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-
-		// 		if msg.Address == client.Address { // Checking if the user it's the same who sent the message
-		// 			continue
-		// 		}
-
-		// 		fmt.Fprintln(client.Connection, "-> "+msg.Text)
-		// 	}
-
-		// case msg := <-leaving:
-		// 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-		// 		fmt.Fprintln(client.Connection, "-> "+msg.Text)
-		// 	}
-
-		// }
 	}
 }

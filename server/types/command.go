@@ -5,8 +5,6 @@ import (
 	"log"
 	"strconv"
 	"strings"
-
-	"github.com/Odzen/TCPCustomFileServer/utils"
 )
 
 type idCommand int
@@ -104,9 +102,11 @@ func SendFile(client *Client, args []string) {
 
 }
 
-func Exit(client *Client, args []string, channelGroup ChannelGroup) {
+func Exit(client *Client, channelGroup ChannelGroup) {
 	log.Printf("Client left: %s", client.Address)
 	channelGroup.Print()
-	channelGroup.DeleteClientFromChannel(*client, client.suscribedToChannel)
-	utils.CloseConnectionClient(client.Connection)
+	if client.suscribedToChannel != 0 {
+		channelGroup.DeleteClientFromChannel(*client, client.suscribedToChannel)
+	}
+
 }

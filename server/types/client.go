@@ -17,6 +17,7 @@ type Client struct {
 	Commands           chan<- Command
 }
 
+// TODO : Return clients in JSON format
 // func (client *Client) ReturnJSON() string {
 // 	clientJSON, _ := json.Marshal(client)
 // 	return string(clientJSON)
