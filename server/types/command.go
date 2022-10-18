@@ -14,6 +14,8 @@ const (
 	SUBSCRIBE
 	CHANNELS
 	MESSAGE
+	CURRENT_CHANNEL
+	INSTRUCTIONS
 	FILE
 	EXIT
 )
@@ -50,6 +52,18 @@ func ProcessCommand(command string, args []string, client *Client) {
 			Client: client,
 			Args:   args,
 		}
+	case "=current":
+		client.Commands <- Command{
+			Id:     CURRENT_CHANNEL,
+			Client: client,
+			Args:   args,
+		}
+	case "=instructions":
+		client.Commands <- Command{
+			Id:     INSTRUCTIONS,
+			Client: client,
+			Args:   args,
+		}
 	case "=file":
 		client.Commands <- Command{
 			Id:     FILE,
@@ -63,20 +77,20 @@ func ProcessCommand(command string, args []string, client *Client) {
 			Args:   args,
 		}
 	default:
-		fmt.Fprintln(client.Connection, "Unknown Command: "+command)
+		fmt.Fprintf(client.Connection, "-> The command `%s` was not accepted. Use the command `=instructions` to see the available commands", command)
 	}
 }
 
 func CreateUsername(client *Client, args []string) {
 	client.ChangeName(args[1])
-	fmt.Fprintln(client.Connection, "Username has been changed to: "+client.Name)
+	fmt.Fprintln(client.Connection, "-> Username has been changed to: "+client.Name)
 }
 
 func SuscribeToChannel(client *Client, args []string, channelGroup ChannelGroup) {
 	selectedChannel, err := strconv.Atoi(args[1])
 
 	if err != nil {
-		fmt.Fprintln(client.Connection, "The Channel must be a number!")
+		fmt.Fprintln(client.Connection, "-> The Channel must be a number!")
 		return
 	}
 
@@ -86,16 +100,24 @@ func SuscribeToChannel(client *Client, args []string, channelGroup ChannelGroup)
 }
 
 func ShowChannels(client *Client, args []string, channelGroup ChannelGroup) {
-	fmt.Fprintf(client.Connection, "Available channels: %v \n", channelGroup.GetAvailableChannels())
+	fmt.Fprintf(client.Connection, "-> Available channels: %v \n", channelGroup.GetAvailableChannels())
+}
+
+func CurrentChannel(client *Client) {
+	if client.SuscribedToChannel == 0 {
+		fmt.Fprintf(client.Connection, "-> You're not subscribed to any channel, use the command ´=channels´ to see available channels or create a new one by using the command ´=subscribe <number>´\n")
+		return
+	}
+	fmt.Fprintf(client.Connection, "-> You're subscribed to the channel # %s \n", strconv.Itoa(client.GetCurrentChannel()))
 }
 
 func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
-	if client.suscribedToChannel == 0 {
-		fmt.Fprintln(client.Connection, "Suscribe to a channel to send messages")
+	if client.SuscribedToChannel == 0 {
+		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send messages")
 		return
 	}
 
-	channelGroup.Broadcast(NewMessage(fmt.Sprintln("--"+client.Name+"-- texted : "+strings.Join(args[1:], " ")), client.Connection, client.suscribedToChannel))
+	channelGroup.Broadcast(NewMessage(fmt.Sprintln("--"+client.Name+"-- texted : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
 func SendFile(client *Client, args []string) {
@@ -105,8 +127,8 @@ func SendFile(client *Client, args []string) {
 func Exit(client *Client, channelGroup ChannelGroup) {
 	log.Printf("Client left: %s", client.Address)
 	channelGroup.Print()
-	if client.suscribedToChannel != 0 {
-		channelGroup.DeleteClientFromChannel(*client, client.suscribedToChannel)
+	if client.SuscribedToChannel != 0 {
+		channelGroup.DeleteClientFromChannel(*client, client.SuscribedToChannel)
 	}
 
 }

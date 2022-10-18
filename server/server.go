@@ -13,13 +13,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
-var defaultChannels = map[int][]*types.Client{
-	1: {},
-	2: {},
-}
-
 var (
-	channelGroup = types.NewChannelGroup(defaultChannels)
+	channelGroup = types.NewChannelGroup(make(map[int][]*types.Client))
 	commands     = make(chan types.Command)
 	numClients   = 0
 )
@@ -85,6 +80,12 @@ func handleCommands() {
 			types.SuscribeToChannel(command.Client, command.Args, channelGroup)
 
 		case types.CHANNELS:
+			types.ShowChannels(command.Client, command.Args, channelGroup)
+
+		case types.CURRENT_CHANNEL:
+			types.CurrentChannel(command.Client)
+
+		case types.INSTRUCTIONS:
 			types.ShowChannels(command.Client, command.Args, channelGroup)
 
 		case types.MESSAGE:
