@@ -6,21 +6,21 @@ import (
 	"log"
 	"net"
 	"os"
+	"strings"
 
 	types "github.com/Odzen/TCPCustomFileServer/server/types"
 	utils "github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
 
-var defaultChannels = map[int][]types.Client{
+var defaultChannels = map[int][]*types.Client{
 	1: {},
 	2: {},
 }
 
 var (
-	leaving      = make(chan types.Message)
-	messages     = make(chan types.Message)
 	channelGroup = types.NewChannelGroup(defaultChannels)
+	commands     = make(chan types.Command)
 	numClients   = 0
 )
 
@@ -44,7 +44,7 @@ func RunServer() {
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
 
-	go broadcaster()
+	go handleCommands()
 	for {
 		connection, err := server.Accept()
 		if err != nil {
@@ -57,56 +57,44 @@ func RunServer() {
 	}
 }
 
-func ChooseChannel() int {
-	if numClients%2 == 0 {
-		return 1
-	} else {
-		return 2
-	}
-}
-
 func processClient(connection net.Conn) {
 	defer utils.CloseConnectionClient(connection)
-
-	selectedChannel := ChooseChannel()
-	client := types.NewClient("", connection)
-	channelGroup.SuscribeToChannelGroup(*client, selectedChannel)
-
-	channelGroup.Print()
-	messages <- types.NewMessage(" joined.", connection, selectedChannel)
+	client := types.NewClient("anonymous", connection, commands)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-		messages <- types.NewMessage(": "+scanner.Text(), connection, selectedChannel)
+		// Process commands
+		newLine := strings.Trim(scanner.Text(), "\r\n")
+		args := strings.Split(newLine, " ")
+		command := strings.TrimSpace(args[0])
+		types.ProcessCommand(command, args, client)
+
 	}
 
-	fmt.Println("CLIENT LEFT")
-	channelGroup.DeleteClientFromChannel(*client, selectedChannel)
-	channelGroup.Print()
-
-	leaving <- types.NewMessage(" has left.", connection, selectedChannel)
+	types.Exit(client, channelGroup)
 
 }
 
-func broadcaster() {
-	for {
-		select {
-		case msg := <-messages:
-			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
+func handleCommands() {
+	for command := range commands {
+		switch command.Id {
+		case types.USERNAME:
+			types.CreateUsername(command.Client, command.Args)
 
-				if msg.Address == client.Address { // Checking if the user it's the same who sent the message
+		case types.SUSCRIBE:
+			types.SuscribeToChannel(command.Client, command.Args, channelGroup)
 
-					continue
-				}
+		case types.CHANNELS:
+			types.ShowChannels(command.Client, command.Args, channelGroup)
 
-				fmt.Fprintln(client.Connection, msg.Text)
-			}
+		case types.MESSAGE:
+			types.SendMessage(command.Client, command.Args, channelGroup)
 
-		case msg := <-leaving:
-			for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-				fmt.Fprintln(client.Connection, msg.Text)
-			}
+		case types.FILE:
+			types.SendFile(command.Client, command.Args)
 
+		case types.EXIT:
+			types.Exit(command.Client, channelGroup)
 		}
 	}
 }
