@@ -17,6 +17,7 @@ var (
 	channelGroup = types.NewChannelGroup(make(map[int][]*types.Client))
 	commands     = make(chan types.Command)
 	numClients   = 0
+	clientLeft   = false
 )
 
 func init() {
@@ -53,7 +54,7 @@ func RunServer() {
 }
 
 func processClient(connection net.Conn) {
-	defer utils.CloseConnectionClient(connection)
+	//defer utils.CloseConnectionClient(connection)
 	client := types.NewClient("anonymous", connection, commands)
 
 	scanner := bufio.NewScanner(connection)
@@ -66,7 +67,10 @@ func processClient(connection net.Conn) {
 
 	}
 
-	types.Exit(client, channelGroup)
+	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
+	if !clientLeft {
+		types.Exit(client, channelGroup)
+	}
 
 }
 
@@ -86,7 +90,7 @@ func handleCommands() {
 			types.CurrentChannel(command.Client)
 
 		case types.INSTRUCTIONS:
-			types.ShowChannels(command.Client, command.Args, channelGroup)
+			types.Instructions(command.Client)
 
 		case types.MESSAGE:
 			types.SendMessage(command.Client, command.Args, channelGroup)
@@ -95,7 +99,9 @@ func handleCommands() {
 			types.SendFile(command.Client, command.Args)
 
 		case types.EXIT:
+			clientLeft = true
 			types.Exit(command.Client, channelGroup)
+
 		}
 	}
 }

@@ -11,7 +11,7 @@ type Message struct {
 func NewMessage(msg string, conn net.Conn, channel int) Message {
 	addr := conn.RemoteAddr().String()
 	return Message{
-		Text:            addr + msg,
+		Text:            msg,
 		Address:         addr,
 		ChannelPipeline: channel,
 	}

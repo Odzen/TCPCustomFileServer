@@ -32,7 +32,7 @@ func (channelGroup *ChannelGroup) SuscribeToChannelGroup(client *Client, channel
 	client.SuscribedToChannel = channel
 
 	// Notify clients
-	channelGroup.Broadcast(NewMessage(fmt.Sprintf(" with the name: %s, has joined the room.", client.Name), client.Connection, channel))
+	channelGroup.Broadcast(NewMessage(fmt.Sprintf(" %s, has joined the room.", client.Name), client.Connection, channel))
 	fmt.Fprintln(client.Connection, "-> "+"Welcome to the channel # "+strconv.Itoa(channel))
 
 }
@@ -43,7 +43,7 @@ func (channelGroup *ChannelGroup) DeleteClientFromChannel(client Client, channel
 	clientsAfterRemoval := append(clients[:indexOfClient], clients[indexOfClient+1:]...)
 	channelGroup.Channels[channel] = clientsAfterRemoval
 	client.SuscribedToChannel = 0
-	channelGroup.Broadcast(NewMessage(" has left the channel.", client.Connection, channel))
+	channelGroup.Broadcast(NewMessage(fmt.Sprintln(client.Name+" has left the channel."), client.Connection, channel))
 }
 
 func (channelGroup *ChannelGroup) getIndexClientFromChannel(wantedClient *Client, channel int) int {
