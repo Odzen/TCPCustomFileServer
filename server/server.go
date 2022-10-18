@@ -44,7 +44,7 @@ func RunServer() {
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
 
-	go broadcaster()
+	go handleCommands()
 	for {
 		connection, err := server.Accept()
 		if err != nil {
@@ -75,7 +75,7 @@ func processClient(connection net.Conn) {
 
 }
 
-func broadcaster() {
+func handleCommands() {
 	for command := range commands {
 		switch command.Id {
 		case types.USERNAME:

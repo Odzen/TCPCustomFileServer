@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 )
 
@@ -43,7 +42,7 @@ func (channelGroup *ChannelGroup) SuscribeToChannelGroup(client *Client, channel
 	client.suscribedToChannel = channel
 
 	// Notify clients
-	channelGroup.Broadcast(NewMessage(fmt.Sprintf("with the name: %s, has joined the room.", client.Name), client.Connection, channel))
+	channelGroup.Broadcast(NewMessage(fmt.Sprintf(" with the name: %s, has joined the room.", client.Name), client.Connection, channel))
 	fmt.Fprintln(client.Connection, "-> "+"Welcome to the channel # "+strconv.Itoa(channel))
 
 }
@@ -61,7 +60,6 @@ func (channelGroup *ChannelGroup) getIndexClientFromChannel(wantedClient *Client
 	clientsInChannel := channelGroup.Channels[channel]
 	for index, client := range clientsInChannel {
 		if client.equals(*wantedClient) {
-			log.Println("Equal", client)
 			return index
 		}
 	}

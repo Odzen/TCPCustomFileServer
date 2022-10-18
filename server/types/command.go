@@ -76,7 +76,7 @@ func SuscribeToChannel(client *Client, args []string, channelGroup ChannelGroup)
 	selectedChannel, err := strconv.Atoi(args[1])
 
 	if err != nil {
-		fmt.Fprintln(client.Connection, "The Channel must be a number: ")
+		fmt.Fprintln(client.Connection, "The Channel must be a number!")
 		return
 	}
 
@@ -95,7 +95,7 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 		return
 	}
 
-	channelGroup.Broadcast(NewMessage(fmt.Sprintln(client.Name+" : "+strings.Join(args[1:], " ")), client.Connection, client.suscribedToChannel))
+	channelGroup.Broadcast(NewMessage(fmt.Sprintln("--"+client.Name+"-- texted : "+strings.Join(args[1:], " ")), client.Connection, client.suscribedToChannel))
 }
 
 func SendFile(client *Client, args []string) {
