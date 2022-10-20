@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"log"
 	"net"
 )
 
@@ -12,6 +13,6 @@ func CloseConnectionServer(serverConnection net.Listener) {
 
 func CloseConnectionClient(clientConnection net.Conn) {
 	if err := clientConnection.Close(); err != nil {
-		panic(err)
+		log.Println(err)
 	}
 }

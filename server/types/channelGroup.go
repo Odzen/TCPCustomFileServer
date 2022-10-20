@@ -23,37 +23,27 @@ func (channelGroup *ChannelGroup) GetClientsByChannel(channel int) []*Client {
 
 func (channelGroup *ChannelGroup) SuscribeToChannelGroup(client *Client, channel int) {
 	// If the client was suscribed to another channel before, remove it from that channel
-	if client.suscribedToChannel != 0 {
-		fmt.Fprintln(client.Connection, "Client suscribed to another channel: ")
-		channelGroup.DeleteClientFromChannel(*client, client.suscribedToChannel)
+	if client.SuscribedToChannel != 0 {
+		fmt.Fprintln(client.Connection, "-> You were removed from the channel # ", client.SuscribedToChannel)
+		channelGroup.DeleteClientFromChannel(*client, client.SuscribedToChannel)
 	}
 
-	_, found := channelGroup.Channels[channel]
-
-	// If the channel doesn't exists, create the channel and add the client to the channel
-	if !found {
-		channelGroup.Channels[channel] = []*Client{client}
-		client.suscribedToChannel = channel
-		return
-	}
-
-	// If the channel exist, just add the client to the channel
 	channelGroup.Channels[channel] = append(channelGroup.Channels[channel], client)
-	client.suscribedToChannel = channel
+	client.SuscribedToChannel = channel
 
 	// Notify clients
-	channelGroup.Broadcast(NewMessage(fmt.Sprintf(" with the name: %s, has joined the room.", client.Name), client.Connection, channel))
+	channelGroup.Broadcast(NewMessage(fmt.Sprintf(" %s, has joined the room.", client.Name), client.Connection, channel))
 	fmt.Fprintln(client.Connection, "-> "+"Welcome to the channel # "+strconv.Itoa(channel))
 
 }
 
 func (channelGroup *ChannelGroup) DeleteClientFromChannel(client Client, channel int) {
 	clients := channelGroup.Channels[channel]
-	indexOfClient := channelGroup.getIndexClientFromChannel(&client, client.suscribedToChannel)
+	indexOfClient := channelGroup.getIndexClientFromChannel(&client, client.SuscribedToChannel)
 	clientsAfterRemoval := append(clients[:indexOfClient], clients[indexOfClient+1:]...)
 	channelGroup.Channels[channel] = clientsAfterRemoval
-	client.suscribedToChannel = 0
-	channelGroup.Broadcast(NewMessage(" has left the channel.", client.Connection, channel))
+	client.SuscribedToChannel = 0
+	channelGroup.Broadcast(NewMessage(fmt.Sprintln(client.Name+" has left the channel."), client.Connection, channel))
 }
 
 func (channelGroup *ChannelGroup) getIndexClientFromChannel(wantedClient *Client, channel int) int {

@@ -13,7 +13,7 @@ type Client struct {
 	Name               string   `json:"name"`
 	Address            string   `json:"address"`
 	Connection         net.Conn `json:"connection"`
-	suscribedToChannel int
+	SuscribedToChannel int
 	Commands           chan<- Command
 }
 
@@ -29,6 +29,10 @@ func (client *Client) ChangeName(newName string) {
 
 func (client *Client) equals(otherClient Client) bool {
 	return (client.Address == otherClient.Address) && (client.Name == otherClient.Name) && (client.Connection == otherClient.Connection)
+}
+
+func (client *Client) GetCurrentChannel() int {
+	return client.SuscribedToChannel
 }
 
 func NewClient(name string, connection net.Conn, commands chan Command) *Client {
