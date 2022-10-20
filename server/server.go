@@ -43,12 +43,11 @@ func RunServer() {
 	go handleCommands()
 	for {
 		connection, err := server.Accept()
-		fmt.Println("Connection: ", connection.LocalAddr().String())
+		fmt.Println("Connection: ", connection.RemoteAddr().String())
 		if err != nil {
 			log.Println(err)
 			continue
 		}
-		fmt.Println("Client connected: ", connection.LocalAddr().String())
 		numClients++
 		go processClient(connection)
 	}

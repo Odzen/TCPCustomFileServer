@@ -68,7 +68,7 @@ func (channelGroup *ChannelGroup) Print() {
 	for channel, clients := range channelGroup.Channels {
 		fmt.Printf("Channel %d : \n", channel)
 		for _, client := range clients {
-			fmt.Printf("%s // ", client.Connection.LocalAddr().String()+"--"+client.Name)
+			fmt.Printf("%s // ", client.Connection.RemoteAddr().String()+"--"+client.Name)
 		}
 		fmt.Printf("\n")
 	}
