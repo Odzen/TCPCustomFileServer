@@ -43,6 +43,7 @@ func RunServer() {
 	go handleCommands()
 	for {
 		connection, err := server.Accept()
+		fmt.Println("Connection: ", connection.LocalAddr().String())
 		if err != nil {
 			log.Println(err)
 			continue
