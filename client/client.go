@@ -1,11 +1,14 @@
 package client
 
 import (
-	"io"
+	"bufio"
+	"encoding/gob"
 	"log"
 	"net"
 	"os"
+	"strings"
 
+	"github.com/Odzen/TCPCustomFileServer/types"
 	utils "github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
@@ -27,30 +30,43 @@ func EstablishConnection() {
 	log.Println("Client connected using the port, ", connection.LocalAddr().String())
 	defer utils.CloseConnectionClient(connection)
 
-	done := make(chan struct{})
-	log.Println("Antes de la rutina")
-	go func() {
-		log.Println("En rutina")
-		bytes, err := io.Copy(os.Stdout, connection)
-		log.Println("Bytes read from console and written to connection: ", bytes)
-		if err != nil {
-			log.Fatal(err)
-		}
-		log.Println("Antes del done")
-		done <- struct{}{}
-	}()
-	log.Println("Sali de la rutina")
-	copyContent(connection, os.Stdin)
-	log.Println("Antes del Done cerrado")
-	<-done
-	log.Println("Done cerrado")
-}
+	reader := bufio.NewReader(os.Stdin)
 
-func copyContent(receiver io.Writer, source io.Reader) {
-	log.Println("En copy content")
-	bytes, err := io.Copy(receiver, source)
-	log.Println("Bytes read from connection and written to console: ", bytes)
-	if err != nil {
-		log.Fatal(err)
+	for {
+
+		newLine, err := reader.ReadString('\n')
+
+		if err != nil {
+			log.Println(err)
+		}
+
+		// Process commands
+		newLine = strings.Trim(newLine, "\r\n")
+
+		args := strings.Split(newLine, " ")
+		command := strings.TrimSpace(args[0])
+
+		log.Println("Command, ", command)
+
+		commandStruct, isValid := types.ProcessCommand(command, args)
+		if !isValid {
+			log.Printf("-> The command `%s` was not accepted. Use the command `=instructions` to see the available commands \n", command)
+		}
+		log.Println("Command: ", commandStruct)
+
+		body := types.BodyMessage{
+			TypedCommand: commandStruct,
+		}
+
+		// Deserialized the information sent by the client
+		err = gob.NewEncoder(connection).Encode(&body)
+
+		if err != nil {
+			return
+		}
+
+		//ProcessCommand(command, args)
+
 	}
+
 }

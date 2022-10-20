@@ -1,14 +1,13 @@
 package server
 
 import (
-	"bufio"
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net"
 	"os"
-	"strings"
 
-	types "github.com/Odzen/TCPCustomFileServer/server/types"
+	types "github.com/Odzen/TCPCustomFileServer/types"
 	utils "github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
@@ -19,6 +18,11 @@ var (
 	numClients   = 0
 	clientLeft   = false
 )
+
+type ServerMessage struct {
+	TextMessage types.Message
+	FileMessage types.File
+}
 
 func init() {
 
@@ -54,18 +58,30 @@ func RunServer() {
 }
 
 func processClient(connection net.Conn) {
-	//defer utils.CloseConnectionClient(connection)
+
+	var clientMessage types.BodyMessage
+
+	// Deserialized the information sent by the client
+	err := gob.NewDecoder(connection).Decode(&clientMessage)
+
+	if err != nil {
+		fmt.Println("Error decoding the server message: ", err)
+		return
+	}
+
+	fmt.Println("Server message from Client: ", clientMessage)
+
 	client := types.NewClient("anonymous", connection, commands)
 
-	scanner := bufio.NewScanner(connection)
-	for scanner.Scan() {
-		// Process commands
-		newLine := strings.Trim(scanner.Text(), "\r\n")
-		args := strings.Split(newLine, " ")
-		command := strings.TrimSpace(args[0])
-		types.ProcessCommand(command, args, client)
+	// scanner := bufio.NewScanner(connection)
+	// for scanner.Scan() {
+	// 	// Process commands
+	// 	newLine := strings.Trim(scanner.Text(), "\r\n")
+	// 	args := strings.Split(newLine, " ")
+	// 	command := strings.TrimSpace(args[0])
+	// 	types.ProcessCommand(command, args, client)
 
-	}
+	// }
 
 	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
 	if !clientLeft {

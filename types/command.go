@@ -28,58 +28,51 @@ type Command struct {
 	Args   []string
 }
 
-func ProcessCommand(command string, args []string, client *Client) {
+func ProcessCommand(command string, args []string) (Command, bool) {
 	switch command {
 	case "=username":
-		client.Commands <- Command{
-			Id:     USERNAME,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   USERNAME,
+			Args: args,
+		}, true
 	case "=subscribe":
-		client.Commands <- Command{
-			Id:     SUBSCRIBE,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   SUBSCRIBE,
+			Args: args,
+		}, true
 	case "=channels":
-		client.Commands <- Command{
-			Id:     CHANNELS,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   CHANNELS,
+			Args: args,
+		}, true
 	case "=message":
-		client.Commands <- Command{
-			Id:     MESSAGE,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   MESSAGE,
+			Args: args,
+		}, true
 	case "=current":
-		client.Commands <- Command{
-			Id:     CURRENT_CHANNEL,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   CURRENT_CHANNEL,
+			Args: args,
+		}, true
 	case "=instructions":
-		client.Commands <- Command{
-			Id:     INSTRUCTIONS,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   INSTRUCTIONS,
+			Args: args,
+		}, true
 	case "=file":
-		client.Commands <- Command{
-			Id:     FILE,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   FILE,
+			Args: args,
+		}, true
 	case "=exit":
-		client.Commands <- Command{
-			Id:     EXIT,
-			Client: client,
-			Args:   args,
-		}
+		return Command{
+			Id:   EXIT,
+			Args: args,
+		}, true
 	default:
-		fmt.Fprintf(client.Connection, "-> The command `%s` was not accepted. Use the command `=instructions` to see the available commands \n", command)
+		//fmt.Fprintf(client.Connection, "-> The command `%s` was not accepted. Use the command `=instructions` to see the available commands \n", command)
+		return Command{}, false
 	}
 }
 

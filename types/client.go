@@ -17,6 +17,12 @@ type Client struct {
 	Commands           chan<- Command
 }
 
+type BodyMessage struct {
+	TypedCommand Command
+	TextMessage  Message
+	FileMessage  File
+}
+
 // TODO : Return clients in JSON format
 // func (client *Client) ReturnJSON() string {
 // 	clientJSON, _ := json.Marshal(client)
