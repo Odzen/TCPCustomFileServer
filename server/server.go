@@ -36,7 +36,7 @@ func RunServer() {
 		os.Exit(1)
 	}
 	defer utils.CloseConnectionServer(server)
-	fmt.Println("Server Running...")
+	fmt.Println("Server Running! Waiting for connections...")
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
 
@@ -47,7 +47,7 @@ func RunServer() {
 			log.Println(err)
 			continue
 		}
-		fmt.Println("Client connected")
+		fmt.Println("Client connected: ", connection.LocalAddr().String())
 		numClients++
 		go processClient(connection)
 	}

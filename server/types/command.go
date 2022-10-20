@@ -127,7 +127,7 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 }
 
 func SendFile(client *Client, args []string) {
-
+	SendFileToClient(client.Connection, args[1])
 }
 
 func Exit(client *Client, channelGroup ChannelGroup) {
