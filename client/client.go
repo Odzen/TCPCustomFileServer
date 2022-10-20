@@ -24,24 +24,32 @@ func EstablishConnection() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("Client connected using the port, ", connection.LocalAddr().String())
 	defer utils.CloseConnectionClient(connection)
 
 	done := make(chan struct{})
+	log.Println("Antes de la rutina")
 	go func() {
-		_, err = io.Copy(os.Stdout, connection)
+		log.Println("En rutina")
+		bytes, err := io.Copy(os.Stdout, connection)
+		log.Println("Bytes read from console and written to connection: ", bytes)
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Println("Antes del done")
 		done <- struct{}{}
 	}()
-
+	log.Println("Sali de la rutina")
 	copyContent(connection, os.Stdin)
+	log.Println("Antes del Done cerrado")
 	<-done
+	log.Println("Done cerrado")
 }
 
 func copyContent(receiver io.Writer, source io.Reader) {
-	_, err := io.Copy(receiver, source)
-
+	log.Println("En copy content")
+	bytes, err := io.Copy(receiver, source)
+	log.Println("Bytes read from connection and written to console: ", bytes)
 	if err != nil {
 		log.Fatal(err)
 	}
