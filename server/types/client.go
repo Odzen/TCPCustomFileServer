@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"log"
 	"net"
 )
 
@@ -37,17 +38,21 @@ func (client *Client) GetCurrentChannel() int {
 	return client.SuscribedToChannel
 }
 
-func (client *Client) VerifiyingFiles() {
-	for file := range client.ChannelForFile {
-		fmt.Fprintln(client.Connection, file)
-	}
+func (client *Client) VerifiyingFiles(file File) {
+	log.Println("Verifiying files")
+	fmt.Fprintln(client.Connection, file)
+	// log.Println("Verifiying files")
+	// for file := range client.ChannelForFile {
+	// 	fmt.Fprintln(client.Connection, file)
+	// }
 }
 
-func NewClient(name string, connection net.Conn, commands chan Command) *Client {
+func NewClient(name string, connection net.Conn, commands chan Command, channelFile chan File) *Client {
 	return &Client{
-		Name:       name,
-		Address:    connection.RemoteAddr().String(),
-		Connection: connection,
-		Commands:   commands,
+		Name:           name,
+		Address:        connection.RemoteAddr().String(),
+		Connection:     connection,
+		Commands:       commands,
+		ChannelForFile: channelFile,
 	}
 }

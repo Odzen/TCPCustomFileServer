@@ -91,7 +91,11 @@ func (channelGroup *ChannelGroup) BroadcastFile(file File) {
 			fmt.Fprintln(client.Connection, "-> "+"File Name", file.Name)
 			fmt.Fprintln(client.Connection, "-> "+"File Size", file.Size)
 			fmt.Fprintln(client.Connection, "-> "+"File Content", file.Content)
-			client.ChannelForFile <- file
+			//client.ChannelForFile <- file
+			client.VerifiyingFiles(file)
+			//client.VerifiyingFiles()
 		}
+
 	}
+
 }

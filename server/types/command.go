@@ -127,7 +127,18 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 }
 
 func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
-	fileToSend := ProccessingFile(client.Connection, args[1], client)
+
+	if client.SuscribedToChannel == 0 {
+		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send files")
+		return
+	}
+
+	fileToSend, err := ProccessingFile(client.Connection, args[1], client)
+
+	if err {
+		log.Println("Error processing file")
+		return
+	}
 
 	channelGroup.BroadcastFile(fileToSend)
 

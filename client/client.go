@@ -37,12 +37,10 @@ func EstablishConnection() {
 
 	go func() {
 
-		bytes, err := io.Copy(os.Stdout, connection)
-		log.Println("Bytes read from console and written to connection: ", bytes)
+		_, err := io.Copy(os.Stdout, connection)
 		if err != nil {
 			log.Fatal(err)
 		}
-		log.Println("Antes del done")
 		done <- struct{}{}
 	}()
 
