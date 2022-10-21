@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 	"os"
+
+	"github.com/Odzen/TCPCustomFileServer/utils"
 )
 
 type IClient interface {
@@ -40,21 +42,22 @@ func (client *Client) GetCurrentChannel() int {
 }
 
 func (client *Client) SaveFile(file File) error {
-	log.Println("Saving file")
-	fmt.Fprintln(client.Connection, file)
+	log.Println("Client: " + client.Name + "--" + "is saving the file:" + file.Name)
+
+	fmt.Fprintln(client.Connection, fmt.Sprintln("Received the file: ", file))
 
 	err := os.MkdirAll(fmt.Sprintf("outFiles/%d", client.SuscribedToChannel), os.ModePerm)
 	if err != nil && !os.IsExist(err) {
-		log.Println(err)
+		log.Println("Error creating the folder", err)
 		return err
 	}
-	fileToSave, err := os.Create(fmt.Sprintf("./files/%d/%s", client.SuscribedToChannel, file.Name))
+	fileToSave, err := os.Create(fmt.Sprintf("./outFiles/%d/%s", client.SuscribedToChannel, file.Name))
 
 	if err != nil {
-		log.Println(err)
+		log.Println("Error creating the file in the folder", err)
 		return err
 	}
-	defer fileToSave.Close()
+	defer utils.CloseFile(fileToSave)
 
 	if _, err := fileToSave.Write(file.Content); err != nil {
 		fmt.Println(err)

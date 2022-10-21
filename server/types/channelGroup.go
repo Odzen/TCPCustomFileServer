@@ -88,11 +88,12 @@ func (channelGroup *ChannelGroup) BroadcastFile(file File) {
 	for _, client := range channelGroup.Channels[file.ChannelPipeline] {
 		if file.Address != client.Address { // Send the file to all the clients, exluding the one who sent it
 			fmt.Fprintln(client.Connection, "-> "+"Sending File..")
-			fmt.Fprintln(client.Connection, "-> "+"File Name", file.Name)
-			fmt.Fprintln(client.Connection, "-> "+"File Size", file.Size)
-			fmt.Fprintln(client.Connection, "-> "+"File Content", file.Content)
+			err := client.SaveFile(file)
 
-			client.SaveFile(file)
+			if err != nil {
+				fmt.Println("Error saving the file for the client:", client.Name+"--"+client.Address)
+				return
+			}
 
 		}
 
