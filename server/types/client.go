@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"net"
 )
 
@@ -15,6 +16,7 @@ type Client struct {
 	Connection         net.Conn `json:"connection"`
 	SuscribedToChannel int
 	Commands           chan<- Command
+	ChannelForFile     chan File
 }
 
 // TODO : Return clients in JSON format
@@ -33,6 +35,12 @@ func (client *Client) equals(otherClient Client) bool {
 
 func (client *Client) GetCurrentChannel() int {
 	return client.SuscribedToChannel
+}
+
+func (client *Client) VerifiyingFiles() {
+	for file := range client.ChannelForFile {
+		fmt.Fprintln(client.Connection, file)
+	}
 }
 
 func NewClient(name string, connection net.Conn, commands chan Command) *Client {
