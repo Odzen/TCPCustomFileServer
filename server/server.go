@@ -46,7 +46,7 @@ func RunServer() {
 		connection, err := server.Accept()
 		fmt.Println("Connection: ", connection.RemoteAddr().String())
 		if err != nil {
-			log.Println(err)
+			fmt.Println(err)
 			continue
 		}
 		numClients++

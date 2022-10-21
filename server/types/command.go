@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -148,7 +147,7 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 }
 
 func Exit(client *Client, channelGroup ChannelGroup) {
-	log.Printf("Client left: %s", client.Address)
+	fmt.Printf("Client left: %s", client.Address)
 
 	channelGroup.Print()
 	if client.SuscribedToChannel != 0 {
