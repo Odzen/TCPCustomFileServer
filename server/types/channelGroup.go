@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 )
@@ -74,16 +75,14 @@ func (channelGroup *ChannelGroup) Print() {
 	}
 }
 
-func (channelGroup *ChannelGroup) ToJson() []string {
+func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
 	var clientsJSON []string
-	for channel, clients := range channelGroup.Channels {
-		fmt.Printf("Channel %d : \n", channel)
+	for _, clients := range channelGroup.Channels {
 		for _, client := range clients {
 			clientsJSON = append(clientsJSON, client.ReturnJSON())
 		}
-		fmt.Printf("\n")
 	}
-	return clientsJSON
+	return json.Marshal(clientsJSON)
 }
 
 func (channelGroup *ChannelGroup) BroadcastMessage(msg Message) {

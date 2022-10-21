@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 
@@ -117,43 +118,16 @@ func handleCommands() {
 	}
 }
 
-func handleHttpRequest(conn net.Conn) {
-	i := 0
-	scanner := bufio.NewScanner(conn)
-	for scanner.Scan() {
-		ln := scanner.Text()
-		fmt.Println(ln)
-		if i == 0 {
-			mux(conn, ln)
-		}
-		if ln == "" {
-			// headers are done
-			break
-		}
-		i++
+func handleHttpRequest() {
+	http.HandleFunc("/clients", serveHTTP)
+	err := http.ListenAndServe(":3030", nil)
+	if err != nil {
+		log.Fatal("Error Litening to port 3030: ", err)
 	}
 }
 
-func mux(conn net.Conn, ln string) {
-	// request line
-	m := strings.Fields(ln)[0] // method
-	u := strings.Fields(ln)[1] // uri
-	fmt.Println("***METHOD", m)
-	fmt.Println("***URI", u)
-
-	// multiplexer
-	if m == "GET" && u == "/clients" {
-		getClients(conn)
-	}
-}
-
-func getClients(conn net.Conn) {
-	body := channelGroup.ToJson()
-	fmt.Println("Body", body)
-
-	fmt.Fprint(conn, "HTTP/1.1 200 OK\r\n")
-	fmt.Fprintf(conn, "Content-Length: %d\r\n", len(body))
-	fmt.Fprint(conn, "Content-Type: application/json\r\n")
-	fmt.Fprint(conn, "\r\n")
-	fmt.Fprint(conn, body)
+func serveHTTP(res http.ResponseWriter, req *http.Request) {
+	result, _ := channelGroup.ToJson()
+	res.Header().Set("Content-Type", "application/json")
+	res.Write(result)
 }
