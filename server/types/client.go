@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 )
 
 type IClient interface {
@@ -38,13 +39,29 @@ func (client *Client) GetCurrentChannel() int {
 	return client.SuscribedToChannel
 }
 
-func (client *Client) VerifiyingFiles(file File) {
-	log.Println("Verifiying files")
+func (client *Client) SaveFile(file File) error {
+	log.Println("Saving file")
 	fmt.Fprintln(client.Connection, file)
-	// log.Println("Verifiying files")
-	// for file := range client.ChannelForFile {
-	// 	fmt.Fprintln(client.Connection, file)
-	// }
+
+	err := os.MkdirAll(fmt.Sprintf("outFiles/%d", client.SuscribedToChannel), os.ModePerm)
+	if err != nil && !os.IsExist(err) {
+		log.Println(err)
+		return err
+	}
+	fileToSave, err := os.Create(fmt.Sprintf("./files/%d/%s", client.SuscribedToChannel, file.Name))
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	defer fileToSave.Close()
+
+	if _, err := fileToSave.Write(file.Content); err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 }
 
 func NewClient(name string, connection net.Conn, commands chan Command, channelFile chan File) *Client {
