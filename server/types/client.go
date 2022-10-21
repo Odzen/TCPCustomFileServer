@@ -1,7 +1,11 @@
 package types
 
 import (
+	"fmt"
 	"net"
+	"os"
+
+	"github.com/Odzen/TCPCustomFileServer/utils"
 )
 
 type IClient interface {
@@ -15,6 +19,7 @@ type Client struct {
 	Connection         net.Conn `json:"connection"`
 	SuscribedToChannel int
 	Commands           chan<- Command
+	ChannelForFile     chan File
 }
 
 // TODO : Return clients in JSON format
@@ -35,11 +40,41 @@ func (client *Client) GetCurrentChannel() int {
 	return client.SuscribedToChannel
 }
 
-func NewClient(name string, connection net.Conn, commands chan Command) *Client {
+func (client *Client) SaveFile(file File) error {
+
+	fmt.Println("Client: " + client.Name + "--" + client.Address + " is saving the file:" + file.Name)
+
+	fmt.Fprintln(client.Connection, fmt.Sprintln("-> Received the file: ", file))
+
+	err := os.MkdirAll(fmt.Sprintf("outFiles/%d", client.SuscribedToChannel), os.ModePerm)
+
+	if err != nil && !os.IsExist(err) {
+		fmt.Println("Error creating the folder", err)
+		return err
+	}
+
+	fileToSave, err := os.Create(fmt.Sprintf("./outFiles/%d/%s", client.SuscribedToChannel, file.Name))
+
+	if err != nil {
+		fmt.Println("Error creating the file in the folder", err)
+		return err
+	}
+	defer utils.CloseFile(fileToSave)
+
+	if _, err := fileToSave.Write(file.Content); err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func NewClient(name string, connection net.Conn, commands chan Command, channelFile chan File) *Client {
 	return &Client{
-		Name:       name,
-		Address:    connection.RemoteAddr().String(),
-		Connection: connection,
-		Commands:   commands,
+		Name:           name,
+		Address:        connection.RemoteAddr().String(),
+		Connection:     connection,
+		Commands:       commands,
+		ChannelForFile: channelFile,
 	}
 }

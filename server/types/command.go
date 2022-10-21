@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
 
@@ -123,15 +122,38 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 		return
 	}
 
-	channelGroup.Broadcast(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
+	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
+		fmt.Fprintln(client.Connection, "-> The message will be sent, but you're the only one in the channel :(")
+	}
+
+	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
-func SendFile(client *Client, args []string) {
+func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
+
+	if client.SuscribedToChannel == 0 {
+		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send files")
+		return
+	}
+
+	fileToSend, err := ProccessingFile(client.Connection, args[1], client)
+
+	if err {
+		fmt.Println("Error processing file")
+		fmt.Fprintln(client.Connection, "-> Error processing file")
+		return
+	}
+
+	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
+		fmt.Fprintln(client.Connection, "-> The file will be sent, but you're the only one in the channel :(")
+	}
+
+	channelGroup.BroadcastFile(fileToSend)
 
 }
 
 func Exit(client *Client, channelGroup ChannelGroup) {
-	log.Printf("Client left: %s", client.Address)
+	fmt.Printf("Client left: %s \n", client.Address)
 
 	channelGroup.Print()
 	if client.SuscribedToChannel != 0 {

@@ -16,6 +16,7 @@ import (
 var (
 	channelGroup = types.NewChannelGroup(make(map[int][]*types.Client))
 	commands     = make(chan types.Command)
+	channelFile  = make(chan types.File)
 	numClients   = 0
 	clientLeft   = false
 )
@@ -36,18 +37,18 @@ func RunServer() {
 		os.Exit(1)
 	}
 	defer utils.CloseConnectionServer(server)
-	fmt.Println("Server Running...")
+	fmt.Println("Server Running! Waiting for connections...")
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
 
 	go handleCommands()
 	for {
 		connection, err := server.Accept()
+		fmt.Println("Connection: ", connection.RemoteAddr().String())
 		if err != nil {
-			log.Println(err)
+			fmt.Println(err)
 			continue
 		}
-		fmt.Println("Client connected")
 		numClients++
 		go processClient(connection)
 	}
@@ -55,7 +56,7 @@ func RunServer() {
 
 func processClient(connection net.Conn) {
 	//defer utils.CloseConnectionClient(connection)
-	client := types.NewClient("anonymous", connection, commands)
+	client := types.NewClient("anonymous", connection, commands, channelFile)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
@@ -69,6 +70,7 @@ func processClient(connection net.Conn) {
 
 	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
 	if !clientLeft {
+		fmt.Println("Left control + C")
 		types.Exit(client, channelGroup)
 	}
 
@@ -96,7 +98,7 @@ func handleCommands() {
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:
-			types.SendFile(command.Client, command.Args)
+			types.SendFile(command.Client, command.Args, channelGroup)
 
 		case types.EXIT:
 			clientLeft = true

@@ -10,6 +10,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const BUFFERSIZE = 1024
+
 func init() {
 
 	err := godotenv.Load(".env")
@@ -24,11 +26,14 @@ func EstablishConnection() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer utils.CloseConnectionClient(connection)
 
 	done := make(chan struct{})
+
 	go func() {
-		_, err = io.Copy(os.Stdout, connection)
+
+		_, err := io.Copy(os.Stdout, connection)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -36,7 +41,9 @@ func EstablishConnection() {
 	}()
 
 	copyContent(connection, os.Stdin)
+
 	<-done
+
 }
 
 func copyContent(receiver io.Writer, source io.Reader) {
