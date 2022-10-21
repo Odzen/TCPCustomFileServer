@@ -16,7 +16,6 @@ import (
 var (
 	channelGroup = types.NewChannelGroup(make(map[int][]*types.Client))
 	commands     = make(chan types.Command)
-	channelFile  = make(chan types.File)
 	numClients   = 0
 	clientLeft   = false
 )
@@ -56,7 +55,7 @@ func RunServer() {
 
 func processClient(connection net.Conn) {
 	//defer utils.CloseConnectionClient(connection)
-	client := types.NewClient("anonymous", connection, commands, channelFile)
+	client := types.NewClient("anonymous", connection, commands)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {

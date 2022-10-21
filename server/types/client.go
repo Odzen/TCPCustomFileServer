@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -14,19 +15,17 @@ type IClient interface {
 }
 
 type Client struct {
-	Name               string   `json:"name"`
-	Address            string   `json:"address"`
-	Connection         net.Conn `json:"connection"`
-	SuscribedToChannel int
-	Commands           chan<- Command
-	ChannelForFile     chan File
+	Name               string         `json:"name"`
+	Address            string         `json:"address"`
+	Connection         net.Conn       `json:"-"`
+	SuscribedToChannel int            `json:"channel"`
+	Commands           chan<- Command `json:"-"`
 }
 
-// TODO : Return clients in JSON format
-// func (client *Client) ReturnJSON() string {
-// 	clientJSON, _ := json.Marshal(client)
-// 	return string(clientJSON)
-// }
+func (client *Client) ReturnJSON() string {
+	clientJSON, _ := json.Marshal(client)
+	return string(clientJSON)
+}
 
 func (client *Client) ChangeName(newName string) {
 	client.Name = newName
@@ -69,12 +68,11 @@ func (client *Client) SaveFile(file File) error {
 	return nil
 }
 
-func NewClient(name string, connection net.Conn, commands chan Command, channelFile chan File) *Client {
+func NewClient(name string, connection net.Conn, commands chan Command) *Client {
 	return &Client{
-		Name:           name,
-		Address:        connection.RemoteAddr().String(),
-		Connection:     connection,
-		Commands:       commands,
-		ChannelForFile: channelFile,
+		Name:       name,
+		Address:    connection.RemoteAddr().String(),
+		Connection: connection,
+		Commands:   commands,
 	}
 }
