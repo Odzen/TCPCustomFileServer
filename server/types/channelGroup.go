@@ -76,11 +76,9 @@ func (channelGroup *ChannelGroup) Print() {
 }
 
 func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
-	var clientsJSON []string
+	var clientsJSON []*Client
 	for _, clients := range channelGroup.Channels {
-		for _, client := range clients {
-			clientsJSON = append(clientsJSON, client.ReturnJSON())
-		}
+		clientsJSON = append(clientsJSON, clients...)
 	}
 	return json.Marshal(clientsJSON)
 }

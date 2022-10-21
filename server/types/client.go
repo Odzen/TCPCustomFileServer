@@ -22,9 +22,9 @@ type Client struct {
 	Commands           chan<- Command `json:"-"`
 }
 
-func (client *Client) ReturnJSON() string {
-	clientJSON, _ := json.Marshal(client)
-	return string(clientJSON)
+func (client *Client) ReturnJSON() []byte {
+	bytesClient, _ := json.Marshal(client)
+	return bytesClient
 }
 
 func (client *Client) ChangeName(newName string) {
