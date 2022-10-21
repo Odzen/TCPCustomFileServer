@@ -31,14 +31,14 @@ func init() {
 }
 
 func RunServer() {
-	server, err := net.Listen(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT"))
+	server, err := net.Listen(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT_TCP"))
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer utils.CloseConnectionServer(server)
 	fmt.Println("Server Running! Waiting for connections...")
-	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
+	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT_TCP"))
 	fmt.Println("Waiting for client...")
 
 	go handleHttpRequest()
@@ -120,14 +120,18 @@ func handleCommands() {
 
 func handleHttpRequest() {
 	http.HandleFunc("/clients", serveHTTP)
-	err := http.ListenAndServe(":3030", nil)
+	err := http.ListenAndServe(":"+os.Getenv("PORT_WEB"), nil)
 	if err != nil {
-		log.Fatal("Error Litening to port 3030: ", err)
+		log.Fatal("Error Listening to port: "+os.Getenv("PORT_WEB")+" ", err)
 	}
 }
 
 func serveHTTP(res http.ResponseWriter, req *http.Request) {
 	result, _ := channelGroup.ToJson()
 	res.Header().Set("Content-Type", "application/json")
-	res.Write(result)
+	_, err := res.Write(result)
+
+	if err != nil {
+		fmt.Println("Error writing the response", err)
+	}
 }
