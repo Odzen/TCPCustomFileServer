@@ -77,6 +77,10 @@ func (channelGroup *ChannelGroup) Print() {
 
 func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
 	var clientsJSON []*Client
+
+	// To show an empty in the JSON format when the channel is empty
+	clientsJSON = make([]*Client, 0)
+
 	for _, clients := range channelGroup.Channels {
 		clientsJSON = append(clientsJSON, clients...)
 	}
