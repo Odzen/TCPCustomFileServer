@@ -22,7 +22,7 @@ func init() {
 }
 
 func EstablishConnection() {
-	connection, err := net.Dial(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT"))
+	connection, err := net.Dial(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT_TCP"))
 	if err != nil {
 		log.Fatal(err)
 	}

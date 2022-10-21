@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strings"
 
@@ -16,7 +17,6 @@ import (
 var (
 	channelGroup = types.NewChannelGroup(make(map[int][]*types.Client))
 	commands     = make(chan types.Command)
-	channelFile  = make(chan types.File)
 	numClients   = 0
 	clientLeft   = false
 )
@@ -31,17 +31,19 @@ func init() {
 }
 
 func RunServer() {
-	server, err := net.Listen(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT"))
+	server, err := net.Listen(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT_TCP"))
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
 	defer utils.CloseConnectionServer(server)
 	fmt.Println("Server Running! Waiting for connections...")
-	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
+	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT_TCP"))
 	fmt.Println("Waiting for client...")
 
+	go handleHttpRequest()
 	go handleCommands()
+
 	for {
 		connection, err := server.Accept()
 		fmt.Println("Connection: ", connection.RemoteAddr().String())
@@ -51,15 +53,24 @@ func RunServer() {
 		}
 		numClients++
 		go processClient(connection)
+
 	}
 }
 
 func processClient(connection net.Conn) {
-	//defer utils.CloseConnectionClient(connection)
-	client := types.NewClient("anonymous", connection, commands, channelFile)
+	client := types.NewClient("anonymous", connection, commands)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
+
+		// ln := scanner.Text()
+		// m := strings.Fields(ln)[0] // method
+
+		// if m == "GET" {
+		// 	fmt.Println("HTTP REQUEST")
+		// } else {
+		// 	fmt.Println("Command")
+		// }
 		// Process commands
 		newLine := strings.Trim(scanner.Text(), "\r\n")
 		args := strings.Split(newLine, " ")
@@ -70,7 +81,6 @@ func processClient(connection net.Conn) {
 
 	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
 	if !clientLeft {
-		fmt.Println("Left control + C")
 		types.Exit(client, channelGroup)
 	}
 
@@ -105,5 +115,23 @@ func handleCommands() {
 			types.Exit(command.Client, channelGroup)
 
 		}
+	}
+}
+
+func handleHttpRequest() {
+	http.HandleFunc("/clients", serveHTTP)
+	err := http.ListenAndServe(":"+os.Getenv("PORT_WEB"), nil)
+	if err != nil {
+		log.Fatal("Error Listening to port: "+os.Getenv("PORT_WEB")+" ", err)
+	}
+}
+
+func serveHTTP(res http.ResponseWriter, req *http.Request) {
+	result, _ := channelGroup.ToJson()
+	res.Header().Set("Content-Type", "application/json")
+	_, err := res.Write(result)
+
+	if err != nil {
+		fmt.Println("Error writing the response", err)
 	}
 }

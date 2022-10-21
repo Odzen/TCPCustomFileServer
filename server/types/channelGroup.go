@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 )
@@ -74,6 +75,18 @@ func (channelGroup *ChannelGroup) Print() {
 	}
 }
 
+func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
+	var clientsJSON []*Client
+
+	// To show an empty in the JSON format when the channel is empty
+	clientsJSON = make([]*Client, 0)
+
+	for _, clients := range channelGroup.Channels {
+		clientsJSON = append(clientsJSON, clients...)
+	}
+	return json.Marshal(clientsJSON)
+}
+
 func (channelGroup *ChannelGroup) BroadcastMessage(msg Message) {
 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 		if msg.Address != client.Address { // Send the message to all the clients, exluding the one who sent it
@@ -100,5 +113,4 @@ func (channelGroup *ChannelGroup) BroadcastFile(file File) {
 		}
 
 	}
-
 }
