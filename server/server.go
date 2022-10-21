@@ -96,7 +96,7 @@ func handleCommands() {
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:
-			types.SendFile(command.Client, command.Args)
+			types.SendFile(command.Client, command.Args, channelGroup)
 
 		case types.EXIT:
 			clientLeft = true

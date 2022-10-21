@@ -9,20 +9,24 @@ import (
 const SIZE = 1024
 
 type File struct {
-	Name    string
-	Size    int64
-	Content []byte
+	Name            string
+	Size            int64
+	Content         []byte
+	Address         string
+	ChannelPipeline int
 }
 
-func NewFile(name string, size int64, content []byte) File {
+func NewFile(name string, size int64, content []byte, address string, pipeline int) File {
 	return File{
-		Name:    name,
-		Size:    size,
-		Content: content,
+		Name:            name,
+		Size:            size,
+		Content:         content,
+		Address:         address,
+		ChannelPipeline: pipeline,
 	}
 }
 
-func ProccessingFile(connection net.Conn, path string) File {
+func ProccessingFile(connection net.Conn, path string, client *Client) File {
 	fmt.Println("Processing File sent by", connection.LocalAddr().String())
 	//defer utils.CloseConnectionClient(connection)
 
@@ -51,12 +55,12 @@ func ProccessingFile(connection net.Conn, path string) File {
 
 	fmt.Printf("read %d bytes: %q\n", count, data[:count])
 
-	newFile := NewFile(fileInfo.Name(), fileInfo.Size(), data[:count])
+	newFile := NewFile(fileInfo.Name(), fileInfo.Size(), data[:count], client.Address, client.SuscribedToChannel)
 	fmt.Printf("File to send over: %s -- %d -- %q\n", newFile.Name, newFile.Size, newFile.Content)
 
 	return newFile
 }
 
-func (fileToSend *File) SendFileToClient() {
-	fmt.Println("File to send", fileToSend)
-}
+// func (fileToSend *File) SendFileToClient() {
+// 	fmt.Println("File to send", fileToSend)
+// }

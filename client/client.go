@@ -10,6 +10,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// var messagesGlobales = make(chan string)
+
+const BUFFERSIZE = 1024
+
 func init() {
 
 	err := godotenv.Load(".env")
@@ -24,13 +28,15 @@ func EstablishConnection() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Client connected using the port, ", connection.LocalAddr().String())
+
 	defer utils.CloseConnectionClient(connection)
 
+	//go handleFiles(connection)
+
 	done := make(chan struct{})
-	log.Println("Antes de la rutina")
+
 	go func() {
-		log.Println("En rutina")
+
 		bytes, err := io.Copy(os.Stdout, connection)
 		log.Println("Bytes read from console and written to connection: ", bytes)
 		if err != nil {
@@ -39,18 +45,61 @@ func EstablishConnection() {
 		log.Println("Antes del done")
 		done <- struct{}{}
 	}()
-	log.Println("Sali de la rutina")
+
 	copyContent(connection, os.Stdin)
-	log.Println("Antes del Done cerrado")
+
 	<-done
-	log.Println("Done cerrado")
+
 }
 
+// func handleFiles(connection net.Conn) {
+// 	log.Println("Handleling files")
+// 	bufferFileName := make([]byte, 64)
+// 	bufferFileSize := make([]byte, 10)
+
+// 	// log.Println("File name", bufferFileName)
+// 	// log.Println("File size", bufferFileSize)
+// 	connection.Read(bufferFileSize)
+// 	fileSize, _ := strconv.ParseInt(strings.Trim(string(bufferFileSize), ":"), 10, 64)
+
+// 	connection.Read(bufferFileName)
+// 	fileName := strings.Trim(string(bufferFileName), ":")
+
+// 	log.Println("Before creating files")
+// 	newFile, err := os.Create(fileName)
+
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer newFile.Close()
+// 	var receivedBytes int64
+// 	log.Println("Before For files")
+
+// 	for {
+// 		if (fileSize - receivedBytes) < BUFFERSIZE {
+// 			io.CopyN(newFile, connection, (fileSize - receivedBytes))
+// 			connection.Read(make([]byte, (receivedBytes+BUFFERSIZE)-fileSize))
+// 			break
+// 		}
+// 		io.CopyN(newFile, connection, BUFFERSIZE)
+// 		receivedBytes += BUFFERSIZE
+// 	}
+// 	fmt.Println("Received file completely!")
+// }
+
 func copyContent(receiver io.Writer, source io.Reader) {
-	log.Println("En copy content")
-	bytes, err := io.Copy(receiver, source)
-	log.Println("Bytes read from connection and written to console: ", bytes)
+	_, err := io.Copy(receiver, source)
+
 	if err != nil {
 		log.Fatal(err)
 	}
 }
+
+// // Escribe todos los mensajes que se van recibiendo
+// // <- chan significa que el canal es exclusivo para leer
+// func MessageWrite(conn net.Conn) {
+// 	for message := range messagesGlobales {
+// 		// Se escriben mensajes que están siendo recibidos a través del canal
+// 		fmt.Fprintln(conn, message)
+// 	}
+// }

@@ -123,12 +123,16 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 		return
 	}
 
-	channelGroup.Broadcast(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
+	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
-func SendFile(client *Client, args []string) {
-	fileToSend := ProccessingFile(client.Connection, args[1])
-	fileToSend.SendFileToClient()
+func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
+	fileToSend := ProccessingFile(client.Connection, args[1], client)
+
+	channelGroup.BroadcastFile(fileToSend)
+
+	// fileToSend.SendFileToClient()
+
 }
 
 func Exit(client *Client, channelGroup ChannelGroup) {
