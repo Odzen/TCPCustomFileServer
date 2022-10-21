@@ -27,8 +27,6 @@ func NewFile(name string, size int64, content []byte, address string, pipeline i
 }
 
 func ProccessingFile(connection net.Conn, path string, client *Client) (File, bool) {
-	fmt.Println("Processing File sent by", connection.LocalAddr().String())
-	//defer utils.CloseConnectionClient(connection)
 
 	file, err := os.Open(path)
 
@@ -36,7 +34,6 @@ func ProccessingFile(connection net.Conn, path string, client *Client) (File, bo
 		fmt.Println("Error reading the file:", err)
 		return File{}, true
 	}
-	//defer file.Close()
 
 	fileInfo, err := file.Stat()
 
@@ -53,14 +50,8 @@ func ProccessingFile(connection net.Conn, path string, client *Client) (File, bo
 		return File{}, true
 	}
 
-	fmt.Printf("read %d bytes: %q\n", count, data[:count])
-
 	newFile := NewFile(fileInfo.Name(), fileInfo.Size(), data[:count], client.Address, client.SuscribedToChannel)
-	fmt.Printf("File to send over: %s -- %d -- %q\n", newFile.Name, newFile.Size, newFile.Content)
+	fmt.Printf("The file has been processed: %s -- %d -- %q\n", newFile.Name, newFile.Size, newFile.Content)
 
 	return newFile, false
 }
-
-// func (fileToSend *File) SendFileToClient() {
-// 	fmt.Println("File to send", fileToSend)
-// }

@@ -136,7 +136,8 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 	fileToSend, err := ProccessingFile(client.Connection, args[1], client)
 
 	if err {
-		log.Println("Error processing file")
+		fmt.Println("Error processing file")
+		fmt.Fprintln(client.Connection, "-> Error processing file")
 		return
 	}
 

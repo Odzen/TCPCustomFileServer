@@ -2,7 +2,6 @@ package types
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"os"
 
@@ -42,19 +41,20 @@ func (client *Client) GetCurrentChannel() int {
 }
 
 func (client *Client) SaveFile(file File) error {
-	log.Println("Client: " + client.Name + "--" + "is saving the file:" + file.Name)
 
-	fmt.Fprintln(client.Connection, fmt.Sprintln("Received the file: ", file))
+	fmt.Println("Client: " + client.Name + "--" + client.Address + " is saving the file:" + file.Name)
+
+	fmt.Fprintln(client.Connection, fmt.Sprintln("-> Received the file: ", file))
 
 	err := os.MkdirAll(fmt.Sprintf("outFiles/%d", client.SuscribedToChannel), os.ModePerm)
 	if err != nil && !os.IsExist(err) {
-		log.Println("Error creating the folder", err)
+		fmt.Println("Error creating the folder", err)
 		return err
 	}
 	fileToSave, err := os.Create(fmt.Sprintf("./outFiles/%d/%s", client.SuscribedToChannel, file.Name))
 
 	if err != nil {
-		log.Println("Error creating the file in the folder", err)
+		fmt.Println("Error creating the file in the folder", err)
 		return err
 	}
 	defer utils.CloseFile(fileToSave)
