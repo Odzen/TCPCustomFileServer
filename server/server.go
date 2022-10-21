@@ -58,8 +58,6 @@ func processClient(connection net.Conn) {
 	//defer utils.CloseConnectionClient(connection)
 	client := types.NewClient("anonymous", connection, commands, channelFile)
 
-	// go client.VerifiyingFiles()
-
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
 		// Process commands
@@ -72,6 +70,7 @@ func processClient(connection net.Conn) {
 
 	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
 	if !clientLeft {
+		fmt.Println("Left control + C")
 		types.Exit(client, channelGroup)
 	}
 

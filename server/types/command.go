@@ -122,6 +122,10 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 		return
 	}
 
+	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
+		fmt.Fprintln(client.Connection, "-> The message will be sent, but you're the only one in the channel :(")
+	}
+
 	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
@@ -140,14 +144,16 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 		return
 	}
 
-	channelGroup.BroadcastFile(fileToSend)
+	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
+		fmt.Fprintln(client.Connection, "-> The file will be sent, but you're the only one in the channel :(")
+	}
 
-	// fileToSend.SendFileToClient()
+	channelGroup.BroadcastFile(fileToSend)
 
 }
 
 func Exit(client *Client, channelGroup ChannelGroup) {
-	fmt.Printf("Client left: %s", client.Address)
+	fmt.Printf("Client left: %s \n", client.Address)
 
 	channelGroup.Print()
 	if client.SuscribedToChannel != 0 {

@@ -47,10 +47,12 @@ func (client *Client) SaveFile(file File) error {
 	fmt.Fprintln(client.Connection, fmt.Sprintln("-> Received the file: ", file))
 
 	err := os.MkdirAll(fmt.Sprintf("outFiles/%d", client.SuscribedToChannel), os.ModePerm)
+
 	if err != nil && !os.IsExist(err) {
 		fmt.Println("Error creating the folder", err)
 		return err
 	}
+
 	fileToSave, err := os.Create(fmt.Sprintf("./outFiles/%d/%s", client.SuscribedToChannel, file.Name))
 
 	if err != nil {
