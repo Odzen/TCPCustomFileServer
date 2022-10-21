@@ -40,7 +40,9 @@ func RunServer() {
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT"))
 	fmt.Println("Waiting for client...")
 
+	go handleHttpRequest()
 	go handleCommands()
+
 	for {
 		connection, err := server.Accept()
 		fmt.Println("Connection: ", connection.RemoteAddr().String())
@@ -50,15 +52,24 @@ func RunServer() {
 		}
 		numClients++
 		go processClient(connection)
+
 	}
 }
 
 func processClient(connection net.Conn) {
-	//defer utils.CloseConnectionClient(connection)
 	client := types.NewClient("anonymous", connection, commands)
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
+
+		// ln := scanner.Text()
+		// m := strings.Fields(ln)[0] // method
+
+		// if m == "GET" {
+		// 	fmt.Println("HTTP REQUEST")
+		// } else {
+		// 	fmt.Println("Command")
+		// }
 		// Process commands
 		newLine := strings.Trim(scanner.Text(), "\r\n")
 		args := strings.Split(newLine, " ")
@@ -69,7 +80,6 @@ func processClient(connection net.Conn) {
 
 	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
 	if !clientLeft {
-		fmt.Println("Left control + C")
 		types.Exit(client, channelGroup)
 	}
 
@@ -105,4 +115,45 @@ func handleCommands() {
 
 		}
 	}
+}
+
+func handleHttpRequest(conn net.Conn) {
+	i := 0
+	scanner := bufio.NewScanner(conn)
+	for scanner.Scan() {
+		ln := scanner.Text()
+		fmt.Println(ln)
+		if i == 0 {
+			mux(conn, ln)
+		}
+		if ln == "" {
+			// headers are done
+			break
+		}
+		i++
+	}
+}
+
+func mux(conn net.Conn, ln string) {
+	// request line
+	m := strings.Fields(ln)[0] // method
+	u := strings.Fields(ln)[1] // uri
+	fmt.Println("***METHOD", m)
+	fmt.Println("***URI", u)
+
+	// multiplexer
+	if m == "GET" && u == "/clients" {
+		getClients(conn)
+	}
+}
+
+func getClients(conn net.Conn) {
+	body := channelGroup.ToJson()
+	fmt.Println("Body", body)
+
+	fmt.Fprint(conn, "HTTP/1.1 200 OK\r\n")
+	fmt.Fprintf(conn, "Content-Length: %d\r\n", len(body))
+	fmt.Fprint(conn, "Content-Type: application/json\r\n")
+	fmt.Fprint(conn, "\r\n")
+	fmt.Fprint(conn, body)
 }

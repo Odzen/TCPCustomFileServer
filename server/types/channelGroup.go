@@ -74,6 +74,18 @@ func (channelGroup *ChannelGroup) Print() {
 	}
 }
 
+func (channelGroup *ChannelGroup) ToJson() []string {
+	var clientsJSON []string
+	for channel, clients := range channelGroup.Channels {
+		fmt.Printf("Channel %d : \n", channel)
+		for _, client := range clients {
+			clientsJSON = append(clientsJSON, client.ReturnJSON())
+		}
+		fmt.Printf("\n")
+	}
+	return clientsJSON
+}
+
 func (channelGroup *ChannelGroup) BroadcastMessage(msg Message) {
 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 		if msg.Address != client.Address { // Send the message to all the clients, exluding the one who sent it
@@ -100,5 +112,4 @@ func (channelGroup *ChannelGroup) BroadcastFile(file File) {
 		}
 
 	}
-
 }
