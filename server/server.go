@@ -62,15 +62,6 @@ func processClient(connection net.Conn) {
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-
-		// ln := scanner.Text()
-		// m := strings.Fields(ln)[0] // method
-
-		// if m == "GET" {
-		// 	fmt.Println("HTTP REQUEST")
-		// } else {
-		// 	fmt.Println("Command")
-		// }
 		// Process commands
 		newLine := strings.Trim(scanner.Text(), "\r\n")
 		args := strings.Split(newLine, " ")
@@ -135,3 +126,9 @@ func serveHTTP(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Error writing the response", err)
 	}
 }
+
+// TODO -- Endpoint for file stastistics
+// 1. Create a global variable which will be an array of Files
+// 2. Send than array when calling SendFile function
+// 3. In that function add the files after processing it
+// 4. Parse to JSON and open the enpoint
