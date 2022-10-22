@@ -83,7 +83,7 @@ func ProcessCommand(command string, args []string, client *Client) {
 }
 
 func CreateUsername(client *Client, args []string) {
-	client.ChangeName(args[1])
+	client.changeName(args[1])
 	fmt.Fprintln(client.Connection, "-> Your username has been changed to: "+client.Name)
 }
 
@@ -109,7 +109,7 @@ func CurrentChannel(client *Client) {
 		fmt.Fprintf(client.Connection, "-> You're not subscribed to any channel, use the command ´=channels´ to see available channels or create a new one by using the command ´=subscribe <number>´\n")
 		return
 	}
-	fmt.Fprintf(client.Connection, "-> You're subscribed to the channel # %s \n", strconv.Itoa(client.GetCurrentChannel()))
+	fmt.Fprintf(client.Connection, "-> You're subscribed to the channel # %s \n", strconv.Itoa(client.getCurrentChannel()))
 }
 
 func Instructions(client *Client) {
@@ -129,11 +129,11 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
-func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
+func SendFile(client *Client, args []string, channelGroup ChannelGroup) bool {
 
 	if client.SuscribedToChannel == 0 {
 		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send files")
-		return
+		return false
 	}
 
 	fileToSend, err := ProccessingFile(client.Connection, args[1], client)
@@ -141,24 +141,24 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 	if err {
 		fmt.Println("Error processing file")
 		fmt.Fprintln(client.Connection, "-> Error processing file")
-		return
+		return true
 	}
 
 	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
 		fmt.Fprintln(client.Connection, "-> The file will be sent, but you're the only one in the channel :(")
 	}
 
-	channelGroup.BroadcastFile(fileToSend)
+	return channelGroup.BroadcastFile(fileToSend)
 
 }
 
 func Exit(client *Client, channelGroup ChannelGroup) {
 	fmt.Printf("Client left: %s \n", client.Address)
 
-	channelGroup.Print()
 	if client.SuscribedToChannel != 0 {
 		channelGroup.DeleteClientFromChannel(*client, client.SuscribedToChannel)
 	}
+	channelGroup.Print()
 
 	utils.CloseConnectionClient(client.Connection)
 }

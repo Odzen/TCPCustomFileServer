@@ -62,15 +62,6 @@ func processClient(connection net.Conn) {
 
 	scanner := bufio.NewScanner(connection)
 	for scanner.Scan() {
-
-		// ln := scanner.Text()
-		// m := strings.Fields(ln)[0] // method
-
-		// if m == "GET" {
-		// 	fmt.Println("HTTP REQUEST")
-		// } else {
-		// 	fmt.Println("Command")
-		// }
 		// Process commands
 		newLine := strings.Trim(scanner.Text(), "\r\n")
 		args := strings.Split(newLine, " ")
@@ -108,6 +99,10 @@ func handleCommands() {
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type the absolute path or the name of the file")
+				break
+			}
 			types.SendFile(command.Client, command.Args, channelGroup)
 
 		case types.EXIT:
@@ -119,17 +114,38 @@ func handleCommands() {
 }
 
 func handleHttpRequest() {
-	http.HandleFunc("/clients", serveHTTP)
+	http.HandleFunc("/clients", serveHTTPClients)
+	http.HandleFunc("/files", serveHTTPFiles)
 	err := http.ListenAndServe(":"+os.Getenv("PORT_WEB"), nil)
 	if err != nil {
 		log.Fatal("Error Listening to port: "+os.Getenv("PORT_WEB")+" ", err)
 	}
 }
 
-func serveHTTP(res http.ResponseWriter, req *http.Request) {
-	result, _ := channelGroup.ToJson()
+func serveHTTPClients(res http.ResponseWriter, req *http.Request) {
+	channelGroupJson, err := channelGroup.ToJson()
+
+	if err != nil {
+		fmt.Println("Error parsing channel group to JSON", err)
+	}
+
 	res.Header().Set("Content-Type", "application/json")
-	_, err := res.Write(result)
+	_, err = res.Write(channelGroupJson)
+
+	if err != nil {
+		fmt.Println("Error writing the response", err)
+	}
+}
+
+func serveHTTPFiles(res http.ResponseWriter, req *http.Request) {
+	filesJson, err := types.SentFilesToJson()
+
+	if err != nil {
+		fmt.Println("Error parsing the files to JSON", err)
+	}
+
+	res.Header().Set("Content-Type", "application/json")
+	_, err = res.Write(filesJson)
 
 	if err != nil {
 		fmt.Println("Error writing the response", err)

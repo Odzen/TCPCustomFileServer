@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -10,8 +9,10 @@ import (
 )
 
 type IClient interface {
-	ReturnJSON() string
 	ChangeName(newName string)
+	equals(otherClient Client) bool
+	getCurrentChannel() int
+	saveFile(file File) error
 }
 
 type Client struct {
@@ -22,12 +23,7 @@ type Client struct {
 	Commands           chan<- Command `json:"-"`
 }
 
-func (client *Client) ReturnJSON() []byte {
-	bytesClient, _ := json.Marshal(client)
-	return bytesClient
-}
-
-func (client *Client) ChangeName(newName string) {
+func (client *Client) changeName(newName string) {
 	client.Name = newName
 }
 
@@ -35,11 +31,11 @@ func (client *Client) equals(otherClient Client) bool {
 	return (client.Address == otherClient.Address) && (client.Name == otherClient.Name) && (client.Connection == otherClient.Connection)
 }
 
-func (client *Client) GetCurrentChannel() int {
+func (client *Client) getCurrentChannel() int {
 	return client.SuscribedToChannel
 }
 
-func (client *Client) SaveFile(file File) error {
+func (client *Client) saveFile(file File) error {
 
 	fmt.Println("Client: " + client.Name + "--" + client.Address + " is saving the file:" + file.Name)
 
