@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 )
 
-const SIZE = 1024
+const MAX_SIZE = 30000
 
 var sentFiles = make([]*File, 0)
 
@@ -52,6 +53,12 @@ func ProccessingFile(connection net.Conn, path string, client *Client) (File, bo
 		fmt.Println("Error getting information of the file:", err)
 		return File{}, true
 	}
+
+	if fileInfo.Size() >= MAX_SIZE {
+		fmt.Println("The file size cannot be greater than "+strconv.Itoa(MAX_SIZE)+" bytes", err)
+		return File{}, true
+	}
+
 	// file's data can be read into a slice of bytes
 	data := make([]byte, fileInfo.Size())
 	count, err := file.Read(data)
