@@ -155,10 +155,10 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) bool {
 func Exit(client *Client, channelGroup ChannelGroup) {
 	fmt.Printf("Client left: %s \n", client.Address)
 
-	channelGroup.Print()
 	if client.SuscribedToChannel != 0 {
 		channelGroup.DeleteClientFromChannel(*client, client.SuscribedToChannel)
 	}
+	channelGroup.Print()
 
 	utils.CloseConnectionClient(client.Connection)
 }

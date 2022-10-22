@@ -8,7 +8,7 @@ import (
 	"strconv"
 )
 
-const MAX_SIZE = 30000
+const MAX_SIZE = 50500
 
 var sentFiles = make([]*File, 0)
 
@@ -55,7 +55,7 @@ func ProccessingFile(connection net.Conn, path string, client *Client) (File, bo
 	}
 
 	if fileInfo.Size() >= MAX_SIZE {
-		fmt.Println("The file size cannot be greater than "+strconv.Itoa(MAX_SIZE)+" bytes", err)
+		fmt.Println("The file size cannot be greater than " + strconv.Itoa(MAX_SIZE) + " bytes")
 		return File{}, true
 	}
 
