@@ -1,6 +1,7 @@
 package types
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -8,12 +9,14 @@ import (
 
 const SIZE = 1024
 
+var sentFiles = make([]*File, 0)
+
 type File struct {
-	Name            string
-	Size            int64
-	Content         []byte
-	Address         string
-	ChannelPipeline int
+	Name            string `json:"file name"`
+	Size            int64  `json:"size"`
+	Content         []byte `json:"content"`
+	Address         string `json:"issuers address"`
+	ChannelPipeline int    `json:"channel pipeline"`
 }
 
 func NewFile(name string, size int64, content []byte, address string, pipeline int) File {
@@ -24,6 +27,14 @@ func NewFile(name string, size int64, content []byte, address string, pipeline i
 		Address:         address,
 		ChannelPipeline: pipeline,
 	}
+}
+
+func (file *File) appendToSentFiles() {
+	sentFiles = append(sentFiles, file)
+}
+
+func SentFilesToJson() ([]byte, error) {
+	return json.Marshal(sentFiles)
 }
 
 func ProccessingFile(connection net.Conn, path string, client *Client) (File, bool) {

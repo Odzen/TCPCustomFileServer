@@ -2,7 +2,6 @@ package server
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -20,7 +19,6 @@ var (
 	commands     = make(chan types.Command)
 	numClients   = 0
 	clientLeft   = false
-	sentFiles    = make([]*types.File, 0)
 )
 
 func init() {
@@ -101,7 +99,11 @@ func handleCommands() {
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:
-			types.SendFile(command.Client, command.Args, channelGroup, sentFiles)
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type the absolute path or the name of the file")
+				break
+			}
+			types.SendFile(command.Client, command.Args, channelGroup)
 
 		case types.EXIT:
 			clientLeft = true
@@ -136,7 +138,7 @@ func serveHTTPClients(res http.ResponseWriter, req *http.Request) {
 }
 
 func serveHTTPFiles(res http.ResponseWriter, req *http.Request) {
-	filesJson, err := json.Marshal(sentFiles)
+	filesJson, err := types.SentFilesToJson()
 
 	if err != nil {
 		fmt.Println("Error parsing the files to JSON", err)
@@ -149,9 +151,3 @@ func serveHTTPFiles(res http.ResponseWriter, req *http.Request) {
 		fmt.Println("Error writing the response", err)
 	}
 }
-
-// TODO -- Endpoint for file stastistics
-// 1. Create a global variable which will be an array of Files -- DONE
-// 2. Send than array when calling SendFile function -- DONE
-// 3. In that function add the files after processing it
-// 4. Parse to JSON and open the enpoint

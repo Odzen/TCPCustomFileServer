@@ -95,9 +95,9 @@ func (channelGroup *ChannelGroup) BroadcastMessage(msg Message) {
 	}
 }
 
-func (channelGroup *ChannelGroup) BroadcastFile(file File, sentFiles []*File) bool {
+func (channelGroup *ChannelGroup) BroadcastFile(file File) bool {
 
-	sentFiles = append(sentFiles, &file)
+	file.appendToSentFiles()
 
 	fmt.Println("Broadcasting file...")
 	for _, client := range channelGroup.Channels[file.ChannelPipeline] {
