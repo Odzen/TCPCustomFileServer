@@ -19,6 +19,7 @@ var (
 	commands     = make(chan types.Command)
 	numClients   = 0
 	clientLeft   = false
+	sentFiles    = make([]*types.File, 0)
 )
 
 func init() {
@@ -99,7 +100,7 @@ func handleCommands() {
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:
-			types.SendFile(command.Client, command.Args, channelGroup)
+			types.SendFile(command.Client, command.Args, channelGroup, sentFiles)
 
 		case types.EXIT:
 			clientLeft = true
@@ -128,7 +129,7 @@ func serveHTTP(res http.ResponseWriter, req *http.Request) {
 }
 
 // TODO -- Endpoint for file stastistics
-// 1. Create a global variable which will be an array of Files
-// 2. Send than array when calling SendFile function
+// 1. Create a global variable which will be an array of Files -- DONE
+// 2. Send than array when calling SendFile function -- DONE
 // 3. In that function add the files after processing it
 // 4. Parse to JSON and open the enpoint
