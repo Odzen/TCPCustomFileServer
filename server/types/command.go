@@ -129,11 +129,11 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 	channelGroup.broadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
-func SendFile(client *Client, args []string, channelGroup ChannelGroup) bool {
+func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 
 	if client.SuscribedToChannel == 0 {
 		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send files")
-		return false
+		return
 	}
 
 	fileToSend, err := ProccessingFile(client.Connection, args[1], client)
@@ -141,14 +141,14 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) bool {
 	if err {
 		fmt.Println("Error processing file")
 		fmt.Fprintln(client.Connection, "-> Error processing file")
-		return true
+		return
 	}
 
 	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
 		fmt.Fprintln(client.Connection, "-> The file will be sent, but you're the only one in the channel :(")
 	}
 
-	return channelGroup.broadcastFile(fileToSend)
+	channelGroup.broadcastFile(fileToSend)
 
 }
 

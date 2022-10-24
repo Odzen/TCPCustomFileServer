@@ -91,7 +91,7 @@ func (channelGroup *ChannelGroup) broadcastMessage(msg Message) {
 	}
 }
 
-func (channelGroup *ChannelGroup) broadcastFile(file File) bool {
+func (channelGroup *ChannelGroup) broadcastFile(file File) {
 
 	file.appendToSentFiles()
 
@@ -104,12 +104,12 @@ func (channelGroup *ChannelGroup) broadcastFile(file File) bool {
 
 			if err != nil {
 				fmt.Println("Error saving the file for the client:", client.Name+"--"+client.Address)
-				return true
+				fmt.Fprintln(client.Connection, "-> "+"Error saving the file")
+				return
 			}
 
 			fmt.Fprintln(client.Connection, "-> "+"The file was saved successfully")
 
 		}
 	}
-	return false
 }
