@@ -81,9 +81,17 @@ func handleCommands() {
 	for command := range commands {
 		switch command.Id {
 		case types.USERNAME:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type a name")
+				break
+			}
 			types.CreateUsername(command.Client, command.Args)
 
 		case types.SUBSCRIBE:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type a channel, remember that the channel must be a number")
+				break
+			}
 			types.SuscribeToChannel(command.Client, command.Args, channelGroup)
 
 		case types.CHANNELS:
@@ -96,6 +104,10 @@ func handleCommands() {
 			types.Instructions(command.Client)
 
 		case types.MESSAGE:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type a message")
+				break
+			}
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:

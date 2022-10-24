@@ -6,11 +6,9 @@ import (
 	"net"
 	"os"
 
-	utils "github.com/Odzen/TCPCustomFileServer/utils"
+	"github.com/Odzen/TCPCustomFileServer/utils"
 	"github.com/joho/godotenv"
 )
-
-const BUFFERSIZE = 1024
 
 func init() {
 
