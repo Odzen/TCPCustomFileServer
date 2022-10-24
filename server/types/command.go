@@ -95,13 +95,13 @@ func SuscribeToChannel(client *Client, args []string, channelGroup ChannelGroup)
 		return
 	}
 
-	channelGroup.SuscribeToChannelGroup(client, selectedChannel)
+	channelGroup.suscribeToChannelGroup(client, selectedChannel)
 
-	channelGroup.Print()
+	channelGroup.print()
 }
 
 func ShowChannels(client *Client, args []string, channelGroup ChannelGroup) {
-	fmt.Fprintf(client.Connection, "-> Available channels: %v \n", channelGroup.GetAvailableChannels())
+	fmt.Fprintf(client.Connection, "-> Available channels: %v \n", channelGroup.getAvailableChannels())
 }
 
 func CurrentChannel(client *Client) {
@@ -126,7 +126,7 @@ func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
 		fmt.Fprintln(client.Connection, "-> The message will be sent, but you're the only one in the channel :(")
 	}
 
-	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
+	channelGroup.broadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
 }
 
 func SendFile(client *Client, args []string, channelGroup ChannelGroup) bool {
@@ -148,7 +148,7 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) bool {
 		fmt.Fprintln(client.Connection, "-> The file will be sent, but you're the only one in the channel :(")
 	}
 
-	return channelGroup.BroadcastFile(fileToSend)
+	return channelGroup.broadcastFile(fileToSend)
 
 }
 
@@ -156,9 +156,9 @@ func Exit(client *Client, channelGroup ChannelGroup) {
 	fmt.Printf("Client left: %s \n", client.Address)
 
 	if client.SuscribedToChannel != 0 {
-		channelGroup.DeleteClientFromChannel(*client, client.SuscribedToChannel)
+		channelGroup.deleteClientFromChannel(*client, client.SuscribedToChannel)
 	}
-	channelGroup.Print()
+	channelGroup.print()
 
 	utils.CloseConnectionClient(client.Connection)
 }

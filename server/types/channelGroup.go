@@ -18,33 +18,29 @@ func NewChannelGroup(channels channel) ChannelGroup {
 	}
 }
 
-func (channelGroup *ChannelGroup) GetClientsByChannel(channel int) []*Client {
-	return channelGroup.Channels[channel]
-}
-
-func (channelGroup *ChannelGroup) SuscribeToChannelGroup(client *Client, channel int) {
+func (channelGroup *ChannelGroup) suscribeToChannelGroup(client *Client, channel int) {
 	// If the client was suscribed to another channel before, remove it from that channel
 	if client.SuscribedToChannel != 0 {
 		fmt.Fprintln(client.Connection, "-> You were removed from the channel # ", client.SuscribedToChannel)
-		channelGroup.DeleteClientFromChannel(*client, client.SuscribedToChannel)
+		channelGroup.deleteClientFromChannel(*client, client.SuscribedToChannel)
 	}
 
 	channelGroup.Channels[channel] = append(channelGroup.Channels[channel], client)
 	client.SuscribedToChannel = channel
 
 	// Notify clients
-	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintf(" %s, has joined the room.", client.Name), client.Connection, channel))
+	channelGroup.broadcastMessage(NewMessage(fmt.Sprintf(" %s, has joined the room.", client.Name), client.Connection, channel))
 	fmt.Fprintln(client.Connection, "-> "+"Welcome to the channel # "+strconv.Itoa(channel))
 
 }
 
-func (channelGroup *ChannelGroup) DeleteClientFromChannel(client Client, channel int) {
+func (channelGroup *ChannelGroup) deleteClientFromChannel(client Client, channel int) {
 	clients := channelGroup.Channels[channel]
 	indexOfClient := channelGroup.getIndexClientFromChannel(&client, client.SuscribedToChannel)
 	clientsAfterRemoval := append(clients[:indexOfClient], clients[indexOfClient+1:]...)
 	channelGroup.Channels[channel] = clientsAfterRemoval
 	client.SuscribedToChannel = 0
-	channelGroup.BroadcastMessage(NewMessage(fmt.Sprintln(client.Name+" has left the channel."), client.Connection, channel))
+	channelGroup.broadcastMessage(NewMessage(fmt.Sprintln(client.Name+" has left the channel."), client.Connection, channel))
 }
 
 func (channelGroup *ChannelGroup) getIndexClientFromChannel(wantedClient *Client, channel int) int {
@@ -57,7 +53,7 @@ func (channelGroup *ChannelGroup) getIndexClientFromChannel(wantedClient *Client
 	return -1
 }
 
-func (channelGroup *ChannelGroup) GetAvailableChannels() []int {
+func (channelGroup *ChannelGroup) getAvailableChannels() []int {
 	var channels []int
 	for key := range channelGroup.Channels {
 		channels = append(channels, key)
@@ -65,7 +61,7 @@ func (channelGroup *ChannelGroup) GetAvailableChannels() []int {
 	return channels
 }
 
-func (channelGroup *ChannelGroup) Print() {
+func (channelGroup *ChannelGroup) print() {
 	for channel, clients := range channelGroup.Channels {
 		fmt.Printf("Channel %d : \n", channel)
 		for _, client := range clients {
@@ -87,7 +83,7 @@ func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
 	return json.Marshal(clientsJSON)
 }
 
-func (channelGroup *ChannelGroup) BroadcastMessage(msg Message) {
+func (channelGroup *ChannelGroup) broadcastMessage(msg Message) {
 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
 		if msg.Address != client.Address { // Send the message to all the clients, exluding the one who sent it
 			fmt.Fprintln(client.Connection, "-> "+msg.Text)
@@ -95,7 +91,7 @@ func (channelGroup *ChannelGroup) BroadcastMessage(msg Message) {
 	}
 }
 
-func (channelGroup *ChannelGroup) BroadcastFile(file File) bool {
+func (channelGroup *ChannelGroup) broadcastFile(file File) bool {
 
 	file.appendToSentFiles()
 
