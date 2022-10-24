@@ -16,7 +16,7 @@ type File struct {
 	Name            string `json:"file name"`
 	Size            int64  `json:"size"`
 	Content         []byte `json:"content"`
-	Address         string `json:"issuers address"`
+	AddressClient   string `json:"issuers address"`
 	ChannelPipeline int    `json:"channel pipeline"`
 }
 
@@ -25,7 +25,7 @@ func NewFile(name string, size int64, content []byte, address string, pipeline i
 		Name:            name,
 		Size:            size,
 		Content:         content,
-		Address:         address,
+		AddressClient:   address,
 		ChannelPipeline: pipeline,
 	}
 }
@@ -38,7 +38,7 @@ func SentFilesToJson() ([]byte, error) {
 	return json.Marshal(sentFiles)
 }
 
-func ProccessingFile(connection net.Conn, path string, client *Client) (File, bool) {
+func ProcessingFile(connection net.Conn, path string, client *Client) (File, bool) {
 
 	file, err := os.Open(path)
 
@@ -68,7 +68,7 @@ func ProccessingFile(connection net.Conn, path string, client *Client) (File, bo
 		return File{}, true
 	}
 
-	newFile := NewFile(fileInfo.Name(), fileInfo.Size(), data[:count], client.Address, client.SuscribedToChannel)
+	newFile := NewFile(fileInfo.Name(), fileInfo.Size(), data[:count], client.Address, client.SubscribedToChannel)
 	fmt.Printf("The file has been processed: %s -- %d -- %q\n", newFile.Name, newFile.Size, newFile.Content)
 
 	return newFile, false

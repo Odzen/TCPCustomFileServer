@@ -4,15 +4,15 @@ import "net"
 
 type Message struct {
 	Text            string
-	Address         string
+	AddressClient   string
 	ChannelPipeline int
 }
 
 func NewMessage(msg string, conn net.Conn, channel int) Message {
-	addr := conn.RemoteAddr().String()
+	addressClient := conn.RemoteAddr().String()
 	return Message{
 		Text:            msg,
-		Address:         addr,
+		AddressClient:   addressClient,
 		ChannelPipeline: channel,
 	}
 }

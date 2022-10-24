@@ -9,18 +9,18 @@ import (
 )
 
 type IClient interface {
-	ChangeName(newName string)
+	changeName(newName string)
 	equals(otherClient Client) bool
 	getCurrentChannel() int
 	saveFile(file File) error
 }
 
 type Client struct {
-	Name               string         `json:"name"`
-	Address            string         `json:"address"`
-	Connection         net.Conn       `json:"-"`
-	SuscribedToChannel int            `json:"channel"`
-	Commands           chan<- Command `json:"-"`
+	Name                string         `json:"name"`
+	Address             string         `json:"address"`
+	Connection          net.Conn       `json:"-"`
+	SubscribedToChannel int            `json:"channel"`
+	Commands            chan<- Command `json:"-"`
 }
 
 func (client *Client) changeName(newName string) {
@@ -32,7 +32,7 @@ func (client *Client) equals(otherClient Client) bool {
 }
 
 func (client *Client) getCurrentChannel() int {
-	return client.SuscribedToChannel
+	return client.SubscribedToChannel
 }
 
 func (client *Client) saveFile(file File) error {
@@ -41,14 +41,14 @@ func (client *Client) saveFile(file File) error {
 
 	fmt.Fprintln(client.Connection, fmt.Sprintln("-> Received the file: ", file))
 
-	err := os.MkdirAll(fmt.Sprintf("outFiles/%d", client.SuscribedToChannel), os.ModePerm)
+	err := os.MkdirAll(fmt.Sprintf("outFiles/%d/%s", client.SubscribedToChannel, client.Name), os.ModePerm) // path,  Unix permission bits, 0o777
 
 	if err != nil && !os.IsExist(err) {
 		fmt.Println("Error creating the folder", err)
 		return err
 	}
 
-	fileToSave, err := os.Create(fmt.Sprintf("./outFiles/%d/%s", client.SuscribedToChannel, file.Name))
+	fileToSave, err := os.Create(fmt.Sprintf("./outFiles/%d/%s/%s", client.SubscribedToChannel, client.Name, file.Name))
 
 	if err != nil {
 		fmt.Println("Error creating the file in the folder", err)
@@ -57,7 +57,7 @@ func (client *Client) saveFile(file File) error {
 	defer utils.CloseFile(fileToSave)
 
 	if _, err := fileToSave.Write(file.Content); err != nil {
-		fmt.Println(err)
+		fmt.Println("Error transferring bytes", err)
 		return err
 	}
 

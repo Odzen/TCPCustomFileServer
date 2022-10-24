@@ -30,19 +30,25 @@ func init() {
 	}
 }
 
+// TCP
+
 func RunServer() {
 	server, err := net.Listen(os.Getenv("PROTOCOL_TYPE"), os.Getenv("HOST")+":"+os.Getenv("PORT_TCP"))
+
 	if err != nil {
 		fmt.Println("Error listening:", err.Error())
 		os.Exit(1)
 	}
+
 	defer utils.CloseConnectionServer(server)
+
 	fmt.Println("Server Running! Waiting for connections...")
 	fmt.Println("Listening on " + os.Getenv("HOST") + ":" + os.Getenv("PORT_TCP"))
 	fmt.Println("Waiting for client...")
 
-	go handleHttpRequest()
-	go handleCommands()
+	go handleHttpRequest() // Go routine to handle the http requests
+
+	go handleCommands() // Go routine to handle the incoming commands
 
 	for {
 		connection, err := server.Accept()
@@ -52,7 +58,7 @@ func RunServer() {
 			continue
 		}
 		numClients++
-		go processClient(connection)
+		go processClient(connection) // Go routine to handle the incoming clients
 
 	}
 }
@@ -70,7 +76,7 @@ func processClient(connection net.Conn) {
 
 	}
 
-	// Check the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
+	// Checking the flag to know if the client already left using the command `=exit`, or is trying to leave forcing the program to stop
 	if !clientLeft {
 		types.Exit(client, channelGroup)
 	}
@@ -81,9 +87,17 @@ func handleCommands() {
 	for command := range commands {
 		switch command.Id {
 		case types.USERNAME:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type a name")
+				break
+			}
 			types.CreateUsername(command.Client, command.Args)
 
 		case types.SUBSCRIBE:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type a channel, remember that the channel must be a number")
+				break
+			}
 			types.SuscribeToChannel(command.Client, command.Args, channelGroup)
 
 		case types.CHANNELS:
@@ -96,6 +110,10 @@ func handleCommands() {
 			types.Instructions(command.Client)
 
 		case types.MESSAGE:
+			if len(command.Args) == 1 {
+				fmt.Fprintln(command.Client.Connection, "-> "+"You have to type a message")
+				break
+			}
 			types.SendMessage(command.Client, command.Args, channelGroup)
 
 		case types.FILE:
@@ -112,6 +130,8 @@ func handleCommands() {
 		}
 	}
 }
+
+// HTTP
 
 func handleHttpRequest() {
 	http.HandleFunc("/clients", serveHTTPClients)
