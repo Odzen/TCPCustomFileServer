@@ -113,7 +113,7 @@ func CurrentChannel(client *Client) {
 }
 
 func Instructions(client *Client) {
-	fmt.Fprintf(client.Connection, "-> `=username <name>` \n-> `=suscribe <number of the channel>` \n-> `=channels` \n-> `=current` \n-> `=intructions` \n-> `=message <string message>` \n-> `=file <file>`\n-> `=exit \n")
+	fmt.Fprintf(client.Connection, "-> `=username <name>` \n-> `=suscribe <number of the channel>` \n-> `=channels` \n-> `=current` \n-> `=instructions` \n-> `=message <string message>` \n-> `=file <file>`\n-> `=exit \n")
 }
 
 func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
