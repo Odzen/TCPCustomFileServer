@@ -95,7 +95,7 @@ func SuscribeToChannel(client *Client, args []string, channelGroup ChannelGroup)
 		return
 	}
 
-	channelGroup.suscribeToChannelGroup(client, selectedChannel)
+	channelGroup.suscribeToChannel(client, selectedChannel)
 
 	channelGroup.print()
 }
@@ -105,7 +105,7 @@ func ShowChannels(client *Client, args []string, channelGroup ChannelGroup) {
 }
 
 func CurrentChannel(client *Client) {
-	if client.SuscribedToChannel == 0 {
+	if client.SubscribedToChannel == 0 {
 		fmt.Fprintf(client.Connection, "-> You're not subscribed to any channel, use the command ´=channels´ to see available channels or create a new one by using the command ´=subscribe <number>´\n")
 		return
 	}
@@ -113,30 +113,30 @@ func CurrentChannel(client *Client) {
 }
 
 func Instructions(client *Client) {
-	fmt.Fprintf(client.Connection, "-> `=username <name>` \n-> `=suscribe <number of the channel>` \n-> `=channels` \n-> `=current` \n-> `=instructions` \n-> `=message <string message>` \n-> `=file <file>`\n-> `=exit \n")
+	fmt.Fprintf(client.Connection, "-> `=username <name>` \n-> `=subscribe <number of the channel>` \n-> `=channels` \n-> `=current` \n-> `=instructions` \n-> `=message <string message>` \n-> `=file <file>`\n-> `=exit \n")
 }
 
 func SendMessage(client *Client, args []string, channelGroup ChannelGroup) {
-	if client.SuscribedToChannel == 0 {
+	if client.SubscribedToChannel == 0 {
 		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send messages")
 		return
 	}
 
-	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
+	if len(channelGroup.Channels[client.SubscribedToChannel]) == 1 {
 		fmt.Fprintln(client.Connection, "-> The message will be sent, but you're the only one in the channel :(")
 	}
 
-	channelGroup.broadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SuscribedToChannel))
+	channelGroup.broadcastMessage(NewMessage(fmt.Sprintln("--"+client.Name+"-- : "+strings.Join(args[1:], " ")), client.Connection, client.SubscribedToChannel))
 }
 
 func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 
-	if client.SuscribedToChannel == 0 {
+	if client.SubscribedToChannel == 0 {
 		fmt.Fprintln(client.Connection, "-> Subscribe first to a channel to send files")
 		return
 	}
 
-	fileToSend, err := ProccessingFile(client.Connection, args[1], client)
+	fileToSend, err := ProcessingFile(client.Connection, args[1], client)
 
 	if err {
 		fmt.Println("Error processing file")
@@ -144,7 +144,7 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 		return
 	}
 
-	if len(channelGroup.Channels[client.SuscribedToChannel]) == 1 {
+	if len(channelGroup.Channels[client.SubscribedToChannel]) == 1 {
 		fmt.Fprintln(client.Connection, "-> The file will be sent, but you're the only one in the channel :(")
 	}
 
@@ -155,8 +155,8 @@ func SendFile(client *Client, args []string, channelGroup ChannelGroup) {
 func Exit(client *Client, channelGroup ChannelGroup) {
 	fmt.Printf("Client left: %s \n", client.Address)
 
-	if client.SuscribedToChannel != 0 {
-		channelGroup.deleteClientFromChannel(*client, client.SuscribedToChannel)
+	if client.SubscribedToChannel != 0 {
+		channelGroup.deleteClientFromChannel(*client, client.SubscribedToChannel)
 	}
 	channelGroup.print()
 

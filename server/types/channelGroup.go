@@ -18,15 +18,15 @@ func NewChannelGroup(channels channel) ChannelGroup {
 	}
 }
 
-func (channelGroup *ChannelGroup) suscribeToChannelGroup(client *Client, channel int) {
-	// If the client was suscribed to another channel before, remove it from that channel
-	if client.SuscribedToChannel != 0 {
-		fmt.Fprintln(client.Connection, "-> You were removed from the channel # ", client.SuscribedToChannel)
-		channelGroup.deleteClientFromChannel(*client, client.SuscribedToChannel)
+func (channelGroup *ChannelGroup) suscribeToChannel(client *Client, channel int) {
+	// If the client was subscribed to another channel before, remove it from that channel
+	if client.SubscribedToChannel != 0 {
+		channelGroup.deleteClientFromChannel(*client, client.SubscribedToChannel)
+		fmt.Fprintln(client.Connection, "-> You were removed from the channel # ", client.SubscribedToChannel)
 	}
 
 	channelGroup.Channels[channel] = append(channelGroup.Channels[channel], client)
-	client.SuscribedToChannel = channel
+	client.SubscribedToChannel = channel
 
 	// Notify clients
 	channelGroup.broadcastMessage(NewMessage(fmt.Sprintf(" %s, has joined the room.", client.Name), client.Connection, channel))
@@ -36,10 +36,10 @@ func (channelGroup *ChannelGroup) suscribeToChannelGroup(client *Client, channel
 
 func (channelGroup *ChannelGroup) deleteClientFromChannel(client Client, channel int) {
 	clients := channelGroup.Channels[channel]
-	indexOfClient := channelGroup.getIndexClientFromChannel(&client, client.SuscribedToChannel)
+	indexOfClient := channelGroup.getIndexClientFromChannel(&client, client.SubscribedToChannel)
 	clientsAfterRemoval := append(clients[:indexOfClient], clients[indexOfClient+1:]...)
 	channelGroup.Channels[channel] = clientsAfterRemoval
-	client.SuscribedToChannel = 0
+	client.SubscribedToChannel = 0
 	channelGroup.broadcastMessage(NewMessage(fmt.Sprintln(client.Name+" has left the channel."), client.Connection, channel))
 }
 
@@ -74,7 +74,7 @@ func (channelGroup *ChannelGroup) print() {
 func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
 	var clientsJSON []*Client
 
-	// To show an empty in the JSON format when the channel is empty
+	// To show an empty array in the JSON format when the channel is empty
 	clientsJSON = make([]*Client, 0)
 
 	for _, clients := range channelGroup.Channels {
@@ -85,7 +85,7 @@ func (channelGroup *ChannelGroup) ToJson() ([]byte, error) {
 
 func (channelGroup *ChannelGroup) broadcastMessage(msg Message) {
 	for _, client := range channelGroup.Channels[msg.ChannelPipeline] {
-		if msg.Address != client.Address { // Send the message to all the clients, exluding the one who sent it
+		if msg.AddressClient != client.Address { // Send the message to all the clients, exluding the one who sent it
 			fmt.Fprintln(client.Connection, "-> "+msg.Text)
 		}
 	}
@@ -97,7 +97,7 @@ func (channelGroup *ChannelGroup) broadcastFile(file File) {
 
 	fmt.Println("Broadcasting file...")
 	for _, client := range channelGroup.Channels[file.ChannelPipeline] {
-		if file.Address != client.Address { // Send the file to all the clients, exluding the one who sent it
+		if file.AddressClient != client.Address { // Send the file to all the clients, exluding the one who sent it
 			fmt.Fprintln(client.Connection, "-> "+"Sending File..")
 
 			err := client.saveFile(file)
