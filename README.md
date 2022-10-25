@@ -22,3 +22,6 @@ To test the server, you can use the files located in the folder `testFiles` or a
 
 ## Endpoints
 The server also has two open endpoints to receive and handle HTTP requests. The first one `/clients` shows which clients are connected and subscribed to specific channels. The second one `/files` shows file delivery statistics. This means that this server can also work as an API for any view. The port for listening to HTTP requests has to be different from the port for listening to TCP connections.
+
+## Web Interface - View
+`https://github.com/Odzen/tcp-view`
