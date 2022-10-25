@@ -145,6 +145,9 @@ func handleHttpRequest() {
 func serveHTTPClients(res http.ResponseWriter, req *http.Request) {
 	channelGroupJson, err := channelGroup.ToJson()
 
+	//Allow CORS here By * or specific origin
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if err != nil {
 		fmt.Println("Error parsing channel group to JSON", err)
 	}
@@ -159,6 +162,9 @@ func serveHTTPClients(res http.ResponseWriter, req *http.Request) {
 
 func serveHTTPFiles(res http.ResponseWriter, req *http.Request) {
 	filesJson, err := types.SentFilesToJson()
+
+	//Allow CORS here By * or specific origin
+	res.Header().Set("Access-Control-Allow-Origin", "*")
 
 	if err != nil {
 		fmt.Println("Error parsing the files to JSON", err)

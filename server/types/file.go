@@ -13,11 +13,11 @@ const MAX_SIZE = 50500
 var sentFiles = make([]*File, 0)
 
 type File struct {
-	Name            string `json:"file name"`
+	Name            string `json:"name"`
 	Size            int64  `json:"size"`
 	Content         []byte `json:"content"`
-	AddressClient   string `json:"issuers address"`
-	ChannelPipeline int    `json:"channel pipeline"`
+	AddressClient   string `json:"address"`
+	ChannelPipeline int    `json:"pipeline"`
 }
 
 func NewFile(name string, size int64, content []byte, address string, pipeline int) File {
