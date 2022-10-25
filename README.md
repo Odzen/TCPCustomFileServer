@@ -25,3 +25,6 @@ The server also has two open endpoints to receive and handle HTTP requests. The 
 
 ## Web Interface - View
 [Link to GitHub Repository](https://github.com/Odzen/tcp-view)
+
+## Demo
+https://www.loom.com/share/29555cff5649472fba556bb14b2593d2
